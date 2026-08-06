@@ -11,6 +11,7 @@ This repository currently contains the product requirements and design handoff p
 - [REQUIREMENTS.md](REQUIREMENTS.md) - MVP product requirements captured from the initial product discussion.
 - [docs/ios-swiftui-feasibility.md](docs/ios-swiftui-feasibility.md) - native iOS feasibility note and stack recommendation.
 - [docs/swiftui-implementation-plan.md](docs/swiftui-implementation-plan.md) - phased SwiftUI build plan and technical risk checklist.
+- [docs/build-and-testflight-flow.md](docs/build-and-testflight-flow.md) - separate Alarum build/TestFlight flow, using UITA only as a reference.
 - [design_handoff_alarum/README.md](design_handoff_alarum/README.md) - self-contained design handoff with tokens, typography, geometry, screen specs, measurements, interactions, state, copy rules, and out-of-scope items.
 - [design_handoff_alarum/alarum-design-brief.md](design_handoff_alarum/alarum-design-brief.md) - original design brief.
 
