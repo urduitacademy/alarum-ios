@@ -15,6 +15,7 @@ Reason: Alarum depends on iOS-specific alarm and notification behavior. Native S
 - Match the design handoff closely.
 - Keep alarm scheduling logic separate from views.
 - Prove iOS notification behavior early before polishing every screen.
+- The product owner does not have a MacBook, so build and TestFlight distribution must use a Mac-based cloud or borrowed-Mac workflow.
 
 ## Proposed Stack
 
@@ -128,6 +129,42 @@ Exit criteria:
 
 - We understand exactly how the MVP alarm behaves on a real iPhone.
 - We document any iOS limitations that affect product copy or UX.
+
+## Phase 1A: Build And TestFlight Workflow
+
+Goal: prove that we can build, sign, upload, and install Alarum on the owner's iPhone without a local MacBook.
+
+Required facts:
+
+- Native iOS apps require Apple's build/signing toolchain.
+- A Windows machine can hold and edit the source code, but it cannot locally archive and sign a native iOS app for TestFlight.
+- TestFlight distribution requires Apple Developer Program membership.
+- Uploading to App Store Connect requires an app record, bundle identifier, signing configuration, and a build produced by Xcode or an equivalent Apple-supported upload workflow.
+
+Recommended workflow:
+
+1. Keep source control in Git.
+2. Use a Mac-based build environment for archive/sign/upload:
+   - Xcode Cloud if the repo is hosted where Apple can access it.
+   - A short-term borrowed/rented Mac for first setup.
+   - A Mac CI service such as Codemagic, Bitrise, GitHub Actions macOS runners, or MacStadium.
+3. Upload builds to App Store Connect.
+4. Install builds on the iPhone through TestFlight.
+
+Minimum setup needed:
+
+- Apple Developer Program membership.
+- App Store Connect access.
+- Bundle identifier, for example `com.alarum.app`.
+- A remote Git repository accessible by the chosen build service.
+- Signing certificates/profiles managed by Xcode or the chosen CI service.
+- TestFlight internal tester added for the owner's Apple Account.
+
+Exit criteria:
+
+- A minimal SwiftUI app builds successfully in a Mac-based environment.
+- A build appears in App Store Connect.
+- The owner can install the build through TestFlight on their iPhone.
 
 ## Phase 2: Data And Scheduling Core
 
@@ -245,4 +282,3 @@ Exit criteria:
 ## Immediate Next Step
 
 Create a minimal SwiftUI feasibility project and test local notification behavior on a real iPhone before implementing the full visual design.
-
