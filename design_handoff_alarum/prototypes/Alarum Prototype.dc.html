@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#0E1014; font-family:'Archivo',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:#FFC24B; text-decoration:none; }
+  a:hover { color:#FFD584; }
+  @keyframes strikeIn { from { transform:rotate(-38deg) scaleX(0); } to { transform:rotate(-38deg) scaleX(1); } }
+  @media (prefers-reduced-motion: reduce) {
+    @keyframes strikeIn { from { opacity:0; } to { opacity:1; } }
+  }
+  .scr::-webkit-scrollbar { width:0; }
+</style>
+</helmet>
+
+<div style="padding:56px 64px 96px;display:flex;flex-direction:column;gap:56px">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
+          <path d="M9 31 L20 9 L31 31" stroke="#F2F3F5" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M11.6 23.2 H28.4" stroke="#FFC24B" stroke-width="3.2" stroke-linecap="round"/>
+        </svg>
+        <div style="font-size:28px;color:#F2F3F5;font-weight:500;letter-spacing:-0.28px">alarum</div>
+      </div>
+      <div style="font-size:16px;color:#6E7682;max-width:520px;line-height:1.5">Interactive prototype — dark mode is the default. Tap through the screens. The tally control in Create is live, and tapping a tally on the Gym row skips its next occurrence, striking a stroke over 200ms.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <sc-for list="{{ navItems }}" as="nav" hint-placeholder-count="6">
+        <div onClick="{{ nav.go }}" style="padding:9px 15px;border-radius:8px;font-size:13px;cursor:pointer;background:{{ nav.bg }};color:{{ nav.fg }};border:0.5px solid #6E768259">{{ nav.label }}</div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:72px;align-items:flex-start;flex-wrap:wrap">
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="font-size:11px;color:#6E7682;letter-spacing:0.4px">Dark — live</div>
+      <div style="width:393px;height:852px;border-radius:44px;background:#1B1E24;border:0.5px solid #6E768259;overflow:hidden;position:relative;flex:none">
+
+        <div style="box-sizing:border-box;height:54px;padding:0 34px;display:flex;align-items:flex-end;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#F2F3F5;padding-bottom:6px">
+          <div>9:41</div>
+          <div style="display:flex;gap:6px;align-items:center;color:#6E7682"><div style="width:16px;height:9px;border:0.5px solid #6E7682;border-radius:2px;position:relative"><div style="position:absolute;inset:1.5px;right:5px;background:#6E7682;border-radius:1px"></div></div></div>
+        </div>
+
+        <!-- ONBOARDING -->
+        <sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ true }}">
+          <div class="scr" style="height:798px;padding:0 20px 20px;display:flex;flex-direction:column">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:48px 0 40px">
+              <svg width="56" height="56" viewBox="0 0 40 40" fill="none">
+                <path d="M9 31 L20 9 L31 31" stroke="#F2F3F5" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M11.6 23.2 H28.4" stroke="#FFC24B" stroke-width="3.2" stroke-linecap="round"/>
+              </svg>
+              <div style="font-size:28px;color:#F2F3F5;font-weight:500;letter-spacing:-0.28px;display:flex;align-items:center">alar<span style="position:relative">u<span style="position:absolute;left:1px;right:1px;top:56%;height:2.6px;background:#FFC24B;border-radius:1.3px"></span></span>m</div>
+              <div style="font-size:16px;color:#6E7682">Alarms with an end date.</div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ permissions }}" as="p" hint-placeholder-count="3">
+                <div style="background:#252A32;border-radius:14px;padding:16px;display:flex;align-items:center;gap:16px">
+                  <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+                    <div style="font-size:16px;color:#F2F3F5;font-weight:500">{{ p.title }}</div>
+                    <div style="font-size:13px;color:#6E7682;line-height:1.45">{{ p.body }}</div>
+                  </div>
+                  <sc-if value="{{ p.granted }}">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="flex:none"><path d="M4 10.5 L8 14.5 L16 5.5" stroke="#6E7682" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </sc-if>
+                  <sc-if value="{{ p.pending }}" hint-placeholder-val="{{ true }}">
+                    <div onClick="{{ p.grant }}" style="flex:none;padding:9px 16px;border-radius:10px;border:0.5px solid #6E7682;font-size:13px;color:#F2F3F5;cursor:pointer">{{ p.action }}</div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="flex:1"></div>
+            <div style="font-size:11px;color:#6E7682;line-height:1.5;padding:0 4px 20px">Alarum uses iOS notifications. It can't fully override Silent Mode like the built-in Clock.</div>
+            <div onClick="{{ goCreate }}" style="background:#FFC24B;color:#1B1E24;border-radius:10px;padding:16px;text-align:center;font-size:16px;font-weight:500;cursor:pointer">Create your first alarm</div>
+            <div style="height:14px"></div>
+          </div>
+        </sc-if>
+
+        <!-- LIST -->
+        <sc-if value="{{ isList }}">
+          <div class="scr" style="height:798px;overflow-y:auto;position:relative">
+            <div style="padding:8px 20px 16px;display:flex;align-items:center;justify-content:space-between">
+              <div style="font-size:28px;color:#F2F3F5;font-weight:500;letter-spacing:-0.28px">Alarms</div>
+              <div onClick="{{ goCreate }}" style="width:36px;height:36px;border-radius:10px;background:#FFC24B;color:#1B1E24;display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1;cursor:pointer;padding-bottom:3px">+</div>
+            </div>
+
+            <div style="padding:0 20px 16px;display:flex;gap:2px;background:#252A32;margin:0 20px 20px;border-radius:10px;padding:3px">
+              <div style="flex:1;text-align:center;padding:8px;border-radius:8px;background:#1B1E24;color:#F2F3F5;font-size:13px">List</div>
+              <div onClick="{{ goCalendar }}" style="flex:1;text-align:center;padding:8px;border-radius:8px;color:#6E7682;font-size:13px;cursor:pointer">Calendar</div>
+            </div>
+
+            <div onClick="{{ goFiring }}" style="margin:0 20px 24px;background:#252A32;border-radius:14px;border-left:3px solid #FFC24B;padding:20px;cursor:pointer;display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;align-items:baseline;gap:6px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:40px;font-weight:500;color:#FFC24B;letter-spacing:-1px;line-height:1">09:00</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:24px;color:#6E7682">AM</div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:16px;color:#F2F3F5">Sat 8 Aug 2026</div>
+              <div style="font-size:13px;color:#6E7682">Passport photos</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#6E7682;padding-top:6px">{{ countdown }}</div>
+            </div>
+
+            <sc-for list="{{ groups }}" as="g" hint-placeholder-count="2">
+              <div>
+                <div style="position:sticky;top:0;background:#1B1E24;padding:8px 20px;font-size:11px;color:#6E7682;letter-spacing:0.4px">{{ g.label }}</div>
+                <sc-for list="{{ g.alarms }}" as="a" hint-placeholder-count="2">
+                  <div style="padding:14px 20px;display:flex;align-items:center;gap:14px;border-top:0.5px solid #6E768259">
+                    <div style="width:74px;display:flex;flex-direction:column;gap:2px">
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;color:#F2F3F5">{{ a.time }}</div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E7682">{{ a.date }}</div>
+                    </div>
+                    <div style="flex:1;font-size:13px;color:#F2F3F5">{{ a.label }}</div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <div onClick="{{ a.skip }}" style="display:flex;gap:4px;align-items:center;cursor:{{ a.tallyCursor }};padding:8px 2px" title="Skip the next occurrence">
+                        <sc-for list="{{ a.tally }}" as="t" hint-placeholder-count="3">
+                          <div style="position:relative;width:6px;height:20px;display:flex;align-items:center;justify-content:center">
+                            <div style="width:2px;height:18px;border-radius:1px;background:{{ t.color }}"></div>
+                            <sc-if value="{{ t.struck }}"><div style="position:absolute;width:13px;height:2px;border-radius:1px;background:#6E7682;transform:rotate(-38deg);animation:strikeIn 200ms ease-out both"></div></sc-if>
+                          </div>
+                        </sc-for>
+                        <sc-if value="{{ a.forever }}"><div style="font-family:'IBM Plex Mono',monospace;font-size:16px;color:#6E7682">∞</div></sc-if>
+                        <sc-if value="{{ a.overflow }}"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E7682;padding-left:2px">{{ a.overflow }}</div></sc-if>
+                      </div>
+                      <div onClick="{{ a.toggle }}" style="width:44px;height:26px;border-radius:13px;padding:2px;cursor:pointer;display:flex;background:{{ a.trackBg }};justify-content:{{ a.knobPos }}">
+                        <div style="width:22px;height:22px;border-radius:11px;background:{{ a.knobBg }}"></div>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+            <div style="height:32px"></div>
+          </div>
+        </sc-if>
+
+        <!-- CREATE -->
+        <sc-if value="{{ isCreate }}">
+          <div class="scr" style="height:798px;overflow-y:auto;display:flex;flex-direction:column">
+            <div style="padding:8px 20px 12px;display:flex;align-items:center;justify-content:space-between">
+              <div onClick="{{ goList }}" style="font-size:16px;color:#6E7682;cursor:pointer">Cancel</div>
+              <div style="font-size:16px;color:#F2F3F5;font-weight:500">New alarm</div>
+              <div onClick="{{ goList }}" style="font-size:16px;color:#FFC24B;cursor:pointer;font-weight:500">Save</div>
+            </div>
+
+            <div style="height:196px;position:relative;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'IBM Plex Mono',monospace">
+              <div style="position:absolute;left:20px;right:20px;height:52px;border-radius:10px;background:#252A32"></div>
+              <div style="position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:14px;color:#6E7682;font-size:20px">
+                <div>05</div><div style="color:#F2F3F5;font-size:40px;line-height:1">07</div><div>08</div>
+              </div>
+              <div style="position:relative;color:#F2F3F5;font-size:40px;padding-bottom:2px">:</div>
+              <div style="position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:14px;color:#6E7682;font-size:20px">
+                <div>15</div><div style="color:#F2F3F5;font-size:40px;line-height:1">30</div><div>45</div>
+              </div>
+              <div style="position:relative;display:flex;flex-direction:column;gap:10px;padding-left:14px;font-size:13px">
+                <div style="color:#F2F3F5">AM</div><div style="color:#6E7682">PM</div>
+              </div>
+            </div>
+
+            <div style="padding:0 20px;display:flex;flex-direction:column;gap:8px">
+
+              <div style="background:#252A32;border-radius:14px;padding:16px">
+                <div style="font-size:13px;color:#6E7682;padding-bottom:12px">Date</div>
+                <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-family:'IBM Plex Mono',monospace;font-size:13px">
+                  <sc-for list="{{ miniCal }}" as="d" hint-placeholder-count="35">
+                    <div style="height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:{{ d.fg }};background:{{ d.bg }}">{{ d.n }}</div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="background:#252A32;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px">
+                <div style="font-size:13px;color:#6E7682;width:56px">Label</div>
+                <div style="flex:1;font-size:16px;color:#6E7682">Dentist</div>
+              </div>
+
+              <div style="background:#252A32;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px">
+                <div style="font-size:13px;color:#6E7682">Repeat</div>
+                <div style="display:flex;gap:6px">
+                  <sc-for list="{{ weekdays }}" as="w" hint-placeholder-count="7">
+                    <div onClick="{{ w.toggle }}" style="flex:1;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;background:{{ w.bg }};color:{{ w.fg }};border:0.5px solid #6E768259">{{ w.label }}</div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <sc-if value="{{ hasRepeat }}" hint-placeholder-val="{{ true }}">
+                <div style="background:#252A32;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px">
+                  <div style="display:flex;align-items:center;justify-content:space-between">
+                    <div style="font-size:13px;color:#6E7682">Limit</div>
+                    <div onClick="{{ toggleForever }}" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                      <div style="font-size:13px;color:{{ foreverFg }}">Forever</div>
+                      <div style="width:38px;height:22px;border-radius:11px;padding:2px;display:flex;background:{{ foreverTrack }};justify-content:{{ foreverPos }}">
+                        <div style="width:18px;height:18px;border-radius:9px;background:{{ foreverKnob }}"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <sc-if value="{{ notForever }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;align-items:center;gap:14px">
+                      <div style="display:flex;gap:10px;align-items:center;min-height:44px">
+                        <sc-for list="{{ strokes }}" as="s" hint-placeholder-count="3">
+                          <div onClick="{{ s.tap }}" style="position:relative;width:16px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer">
+                            <div style="width:3px;height:34px;border-radius:1.5px;background:{{ s.color }}"></div>
+                            <sc-if value="{{ s.struck }}"><div style="position:absolute;width:22px;height:3px;border-radius:1.5px;background:#6E7682;animation:strikeIn 200ms ease-out both"></div></sc-if>
+                          </div>
+                        </sc-for>
+                        <sc-if value="{{ canAdd }}" hint-placeholder-val="{{ true }}">
+                          <div onClick="{{ addStroke }}" style="width:32px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;border:0.5px dashed #6E768259;color:#6E7682;font-size:16px">+</div>
+                        </sc-if>
+                      </div>
+                      <div style="flex:1;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#6E7682">{{ leftLabel }}</div>
+                    </div>
+                    <sc-if value="{{ showNumeric }}">
+                      <div style="display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#6E7682">
+                        <div style="padding:8px 12px;border-radius:8px;border:0.5px solid #6E768259;color:#F2F3F5">{{ count }}</div>
+                        <div>occurrences</div>
+                      </div>
+                    </sc-if>
+                  </sc-if>
+
+                  <div style="font-size:13px;color:#6E7682;line-height:1.5;padding-top:2px">{{ confirmCopy }}</div>
+                </div>
+              </sc-if>
+
+              <div style="background:#252A32;border-radius:14px;padding:4px 16px">
+                <div style="padding:14px 0;display:flex;align-items:center;justify-content:space-between">
+                  <div style="display:flex;flex-direction:column;gap:2px">
+                    <div style="font-size:16px;color:#F2F3F5">Sound</div>
+                    <div style="font-size:11px;color:#6E7682">Primary alert</div>
+                  </div>
+                  <div style="width:44px;height:26px;border-radius:13px;padding:2px;display:flex;justify-content:flex-end;background:#FFC24B"><div style="width:22px;height:22px;border-radius:11px;background:#1B1E24"></div></div>
+                </div>
+                <div style="height:0.5px;background:#6E768259"></div>
+                <div style="padding:14px 0;display:flex;align-items:center;justify-content:space-between">
+                  <div style="font-size:16px;color:#F2F3F5">Vibration and flash</div>
+                  <div onClick="{{ toggleFlash }}" style="width:44px;height:26px;border-radius:13px;padding:2px;display:flex;cursor:pointer;background:{{ flashTrack }};justify-content:{{ flashPos }}"><div style="width:22px;height:22px;border-radius:11px;background:{{ flashKnob }}"></div></div>
+                </div>
+              </div>
+
+              <sc-if value="{{ flashOn }}">
+                <div style="padding:2px 4px 0;display:flex;flex-direction:column;gap:6px">
+                  <div style="font-size:13px;color:#C2402F;line-height:1.45">Flash needs LED Flash for Alerts turned on in iOS Settings.</div>
+                  <div style="font-size:13px;color:#FFC24B;cursor:pointer">Open Settings</div>
+                </div>
+              </sc-if>
+
+              <div style="height:32px"></div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- FIRING -->
+        <sc-if value="{{ isFiring }}">
+          <div style="height:798px;padding:0 20px 20px;display:flex;flex-direction:column;background:#1B1E24">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:96px;font-weight:500;color:#FFC24B;letter-spacing:-3px;line-height:1">09:00</div>
+              <div style="font-size:20px;color:#F2F3F5">Passport photos</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;padding-bottom:32px">
+              <div style="height:3px;border-radius:1.5px;background:#6E768259;overflow:hidden">
+                <div style="height:3px;border-radius:1.5px;background:#FFC24B;width:{{ nagWidth }}"></div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#6E7682;text-align:center">{{ nagLabel }}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div onClick="{{ goList }}" style="background:#FFC24B;color:#1B1E24;border-radius:10px;padding:24px;text-align:center;font-size:20px;font-weight:500;cursor:pointer">Snooze 5 min</div>
+              <div onClick="{{ goList }}" style="border:0.5px solid #6E7682;color:#F2F3F5;border-radius:10px;padding:14px;text-align:center;font-size:16px;cursor:pointer">Stop</div>
+            </div>
+            <div style="height:14px"></div>
+          </div>
+        </sc-if>
+
+        <!-- CALENDAR -->
+        <sc-if value="{{ isCalendar }}">
+          <div class="scr" style="height:798px;overflow-y:auto">
+            <div style="padding:8px 20px 12px;display:flex;align-items:center;justify-content:space-between">
+              <div style="font-size:28px;color:#F2F3F5;font-weight:500;letter-spacing:-0.28px">August 2026</div>
+              <div onClick="{{ goCreate }}" style="width:36px;height:36px;border-radius:10px;background:#FFC24B;color:#1B1E24;display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1;cursor:pointer;padding-bottom:3px">+</div>
+            </div>
+            <div style="display:flex;gap:2px;background:#252A32;margin:8px 20px 20px;border-radius:10px;padding:3px">
+              <div onClick="{{ goList }}" style="flex:1;text-align:center;padding:8px;border-radius:8px;color:#6E7682;font-size:13px;cursor:pointer">List</div>
+              <div style="flex:1;text-align:center;padding:8px;border-radius:8px;background:#1B1E24;color:#F2F3F5;font-size:13px">Calendar</div>
+            </div>
+            <div style="padding:0 20px;display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:11px;color:#6E7682;text-align:center;padding-bottom:8px">
+              <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
+            </div>
+            <div style="padding:0 20px;display:grid;grid-template-columns:repeat(7,1fr);gap:2px">
+              <sc-for list="{{ monthCal }}" as="d" hint-placeholder-count="35">
+                <div onClick="{{ d.tap }}" style="height:52px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:13px;color:{{ d.fg }};background:{{ d.bg }};border:{{ d.ring }}">
+                  <div>{{ d.n }}</div>
+                  <sc-if value="{{ d.dot }}"><div style="width:4px;height:4px;border-radius:2px;background:#FFC24B"></div></sc-if>
+                  <sc-if value="{{ d.count }}"><div style="font-size:11px;color:#FFC24B;line-height:1">{{ d.count }}</div></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="padding:24px 20px 8px;font-size:11px;color:#6E7682;letter-spacing:0.4px">{{ selectedLabel }}</div>
+            <sc-for list="{{ selectedAlarms }}" as="a" hint-placeholder-count="2">
+              <div style="padding:14px 20px;display:flex;align-items:center;gap:14px;border-top:0.5px solid #6E768259">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;color:#F2F3F5;width:74px">{{ a.time }}</div>
+                <div style="flex:1;font-size:13px;color:#F2F3F5">{{ a.label }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E7682">{{ a.meta }}</div>
+              </div>
+            </sc-for>
+            <div style="height:32px"></div>
+          </div>
+        </sc-if>
+
+        <!-- SETTINGS -->
+        <sc-if value="{{ isSettings }}">
+          <div class="scr" style="height:798px;overflow-y:auto">
+            <div style="padding:8px 20px 20px;font-size:28px;color:#F2F3F5;font-weight:500;letter-spacing:-0.28px">Settings</div>
+            <div style="padding:0 20px;display:flex;flex-direction:column;gap:8px">
+              <div style="background:#252A32;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px">
+                <div style="font-size:13px;color:#6E7682">Appearance</div>
+                <div style="display:flex;gap:2px;background:#1B1E24;border-radius:10px;padding:3px">
+                  <sc-for list="{{ appearance }}" as="o" hint-placeholder-count="3">
+                    <div onClick="{{ o.pick }}" style="flex:1;text-align:center;padding:8px;border-radius:8px;font-size:13px;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="background:#252A32;border-radius:14px;padding:4px 16px">
+                <div style="padding:14px 0;display:flex;align-items:center;justify-content:space-between">
+                  <div style="font-size:16px;color:#F2F3F5">Default sound</div>
+                  <div style="width:44px;height:26px;border-radius:13px;padding:2px;display:flex;justify-content:flex-end;background:#FFC24B"><div style="width:22px;height:22px;border-radius:11px;background:#1B1E24"></div></div>
+                </div>
+                <div style="height:0.5px;background:#6E768259"></div>
+                <div style="padding:14px 0;display:flex;align-items:center;justify-content:space-between">
+                  <div style="font-size:16px;color:#F2F3F5">Default vibration and flash</div>
+                  <div style="width:44px;height:26px;border-radius:13px;padding:2px;display:flex;justify-content:flex-start;background:#6E768259"><div style="width:22px;height:22px;border-radius:11px;background:#6E7682"></div></div>
+                </div>
+              </div>
+              <div style="background:#252A32;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+                <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+                  <div style="font-size:16px;color:#F2F3F5">Flash setup</div>
+                  <div style="font-size:13px;color:#C2402F">LED Flash for Alerts is off.</div>
+                </div>
+                <div style="flex:none;white-space:nowrap;padding:9px 14px;border-radius:10px;border:0.5px solid #6E7682;font-size:13px;color:#F2F3F5;cursor:pointer">Re-check</div>
+              </div>
+              <div style="background:#252A32;border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+                <div style="font-size:16px;color:#F2F3F5">About iOS alarm limits</div>
+                <div style="color:#6E7682;font-size:16px">›</div>
+              </div>
+              <div style="font-size:11px;color:#6E7682;line-height:1.5;padding:12px 4px">Alarum uses iOS notifications. It can't fully override Silent Mode like the built-in Clock.</div>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="font-size:11px;color:#6E7682;letter-spacing:0.4px">Light — alarm list</div>
+      <div style="width:393px;height:852px;border-radius:44px;background:#F2F3F5;border:0.5px solid #6E768259;overflow:hidden;flex:none">
+        <div style="box-sizing:border-box;height:54px;padding:0 34px 6px;display:flex;align-items:flex-end;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#1B1E24">
+          <div>9:41</div>
+          <div style="width:16px;height:9px;border:0.5px solid #6E7682;border-radius:2px;position:relative"><div style="position:absolute;inset:1.5px;right:5px;background:#6E7682;border-radius:1px"></div></div>
+        </div>
+        <div style="padding:8px 20px 16px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:28px;color:#1B1E24;font-weight:500;letter-spacing:-0.28px">Alarms</div>
+          <div style="width:36px;height:36px;border-radius:10px;background:#FFC24B;color:#1B1E24;display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1;padding-bottom:3px">+</div>
+        </div>
+        <div style="display:flex;gap:2px;background:#E4E6EA;margin:0 20px 20px;border-radius:10px;padding:3px">
+          <div style="flex:1;text-align:center;padding:8px;border-radius:8px;background:#F2F3F5;color:#1B1E24;font-size:13px">List</div>
+          <div style="flex:1;text-align:center;padding:8px;border-radius:8px;color:#6E7682;font-size:13px">Calendar</div>
+        </div>
+        <div style="margin:0 20px 24px;background:#E4E6EA;border-radius:14px;border-left:3px solid #FFC24B;padding:20px;display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:baseline;gap:6px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:40px;font-weight:500;color:#1B1E24;letter-spacing:-1px;line-height:1">09:00</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:24px;color:#6E7682">AM</div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:16px;color:#1B1E24">Sat 8 Aug 2026</div>
+          <div style="font-size:13px;color:#6E7682">Passport photos</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#6E7682;padding-top:6px">{{ countdown }}</div>
+        </div>
+        <div style="padding:8px 20px;font-size:11px;color:#6E7682;letter-spacing:0.4px">Fri 14 Aug</div>
+        <sc-for list="{{ lightRows }}" as="a" hint-placeholder-count="3">
+          <div style="padding:14px 20px;display:flex;align-items:center;gap:14px;border-top:0.5px solid #6E768259">
+            <div style="width:74px;display:flex;flex-direction:column;gap:2px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;color:#1B1E24">{{ a.time }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E7682">{{ a.date }}</div>
+            </div>
+            <div style="flex:1;font-size:13px;color:#1B1E24">{{ a.label }}</div>
+            <div style="display:flex;gap:4px;align-items:center">
+              <sc-for list="{{ a.tally }}" as="t" hint-placeholder-count="3">
+                <div style="position:relative;width:6px;height:20px;display:flex;align-items:center;justify-content:center">
+                  <div style="width:2px;height:18px;border-radius:1px;background:{{ t.lightColor }}"></div>
+                  <sc-if value="{{ t.struck }}"><div style="position:absolute;width:13px;height:2px;border-radius:1px;background:#6E7682;transform:rotate(-38deg)"></div></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="width:44px;height:26px;border-radius:13px;padding:2px;display:flex;background:{{ a.lightTrack }};justify-content:{{ a.knobPos }}"><div style="width:22px;height:22px;border-radius:11px;background:{{ a.lightKnob }}"></div></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="font-size:11px;color:#6E7682;letter-spacing:0.4px">Light — create alarm</div>
+      <div style="width:393px;height:852px;border-radius:44px;background:#F2F3F5;border:0.5px solid #6E768259;overflow:hidden;flex:none">
+        <div style="box-sizing:border-box;height:54px;padding:0 34px 6px;display:flex;align-items:flex-end;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#1B1E24">
+          <div>9:41</div>
+          <div style="width:16px;height:9px;border:0.5px solid #6E7682;border-radius:2px;position:relative"><div style="position:absolute;inset:1.5px;right:5px;background:#6E7682;border-radius:1px"></div></div>
+        </div>
+        <div style="padding:8px 20px 12px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:16px;color:#6E7682">Cancel</div>
+          <div style="font-size:16px;color:#1B1E24;font-weight:500">New alarm</div>
+          <div style="font-size:16px;color:#B8860B;font-weight:500">Save</div>
+        </div>
+        <div style="height:196px;position:relative;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'IBM Plex Mono',monospace">
+          <div style="position:absolute;left:20px;right:20px;height:52px;border-radius:10px;background:#E4E6EA"></div>
+          <div style="position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:14px;color:#6E7682;font-size:20px"><div>05</div><div style="color:#1B1E24;font-size:40px;line-height:1">07</div><div>08</div></div>
+          <div style="position:relative;color:#1B1E24;font-size:40px;padding-bottom:2px">:</div>
+          <div style="position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:14px;color:#6E7682;font-size:20px"><div>15</div><div style="color:#1B1E24;font-size:40px;line-height:1">30</div><div>45</div></div>
+          <div style="position:relative;display:flex;flex-direction:column;gap:10px;padding-left:14px;font-size:13px"><div style="color:#1B1E24">AM</div><div style="color:#6E7682">PM</div></div>
+        </div>
+        <div style="padding:0 20px;display:flex;flex-direction:column;gap:8px">
+          <div style="background:#E4E6EA;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px">
+            <div style="font-size:13px;color:#6E7682;width:56px">Date</div>
+            <div style="flex:1;font-family:'IBM Plex Mono',monospace;font-size:16px;color:#1B1E24">Fri 14 Aug 2026</div>
+            <div style="color:#6E7682;font-size:16px">›</div>
+          </div>
+          <div style="background:#E4E6EA;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px">
+            <div style="font-size:13px;color:#6E7682;width:56px">Label</div>
+            <div style="flex:1;font-size:16px;color:#1B1E24">Dentist</div>
+          </div>
+          <div style="background:#E4E6EA;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px">
+            <div style="font-size:13px;color:#6E7682">Repeat</div>
+            <div style="display:flex;gap:6px">
+              <sc-for list="{{ lightWeekdays }}" as="w" hint-placeholder-count="7">
+                <div style="flex:1;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;background:{{ w.bg }};color:{{ w.fg }};border:0.5px solid #6E768259">{{ w.label }}</div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#E4E6EA;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div style="font-size:13px;color:#6E7682">Limit</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="font-size:13px;color:#6E7682">Forever</div>
+                <div style="width:38px;height:22px;border-radius:11px;padding:2px;display:flex;background:#D3D6DC;justify-content:flex-start"><div style="width:18px;height:18px;border-radius:9px;background:#6E7682"></div></div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <div style="display:flex;gap:10px;align-items:center;min-height:44px">
+                <div style="width:16px;height:44px;display:flex;align-items:center;justify-content:center"><div style="width:3px;height:34px;border-radius:1.5px;background:#FFC24B"></div></div>
+                <div style="width:16px;height:44px;display:flex;align-items:center;justify-content:center"><div style="width:3px;height:34px;border-radius:1.5px;background:#1B1E24"></div></div>
+                <div style="width:32px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:0.5px dashed #6E768259;color:#6E7682;font-size:16px">+</div>
+              </div>
+              <div style="flex:1;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#6E7682">2 left</div>
+            </div>
+            <div style="font-size:13px;color:#6E7682;line-height:1.5">Friday 14 August and Friday 21 August 2026 only.</div>
+          </div>
+          <div style="background:#E4E6EA;border-radius:14px;padding:4px 16px">
+            <div style="padding:14px 0;display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:16px;color:#1B1E24">Sound</div>
+                <div style="font-size:11px;color:#6E7682">Primary alert</div>
+              </div>
+              <div style="width:44px;height:26px;border-radius:13px;padding:2px;display:flex;justify-content:flex-end;background:#FFC24B"><div style="width:22px;height:22px;border-radius:11px;background:#F2F3F5"></div></div>
+            </div>
+            <div style="height:0.5px;background:#6E768259"></div>
+            <div style="padding:14px 0;display:flex;align-items:center;justify-content:space-between">
+              <div style="font-size:16px;color:#1B1E24">Vibration and flash</div>
+              <div style="width:44px;height:26px;border-radius:13px;padding:2px;display:flex;justify-content:flex-start;background:#D3D6DC"><div style="width:22px;height:22px;border-radius:11px;background:#6E7682"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  state = {
+    screen: 'list',
+    perms: { notifications: false, sound: false, flash: false },
+    count: 3, fired: 1, forever: false, flashOn: false,
+    days: { F: true },
+    selectedDay: 14,
+    gymFired: 1,
+    now: Date.now(),
+    nagStart: null,
+    appearance: 'Dark'
+  };
+
+  componentDidMount() {
+    this.t = setInterval(() => this.setState({ now: Date.now() }), 1000);
+  }
+  componentWillUnmount() { clearInterval(this.t); }
+
+  go(screen) {
+    return () => this.setState(s => ({ screen, nagStart: screen === 'firing' ? Date.now() : s.nagStart }));
+  }
+
+  tally(count, fired, next) {
+    const out = [];
+    for (let i = 0; i < count; i++) {
+      const isFired = i < fired;
+      out.push({
+        struck: isFired,
+        color: isFired ? '#6E7682' : (i === fired && next ? '#FFC24B' : '#F2F3F5'),
+        lightColor: isFired ? '#6E7682' : (i === fired && next ? '#FFC24B' : '#1B1E24')
+      });
+    }
+    return out;
+  }
+
+  row(a) {
+    return Object.assign({}, a, {
+      tally: a.tallyCount ? this.tally(a.tallyCount, a.tallyFired || 0, a.next) : [],
+      trackBg: a.on === false ? '#6E768259' : '#FFC24B',
+      knobBg: a.on === false ? '#6E7682' : '#1B1E24',
+      lightTrack: a.on === false ? '#D3D6DC' : '#FFC24B',
+      lightKnob: a.on === false ? '#6E7682' : '#F2F3F5',
+      knobPos: a.on === false ? 'flex-start' : 'flex-end',
+      toggle: () => {},
+      tallyCursor: a.skip ? 'pointer' : 'default'
+    });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const screen = s.screen;
+
+    const navItems = [
+      ['Onboarding', 'onboarding'], ['Alarm list', 'list'], ['Create', 'create'],
+      ['Firing', 'firing'], ['Calendar', 'calendar'], ['Settings', 'settings']
+    ].map(([label, key]) => ({
+      label, go: this.go(key),
+      bg: screen === key ? '#FFC24B' : 'transparent',
+      fg: screen === key ? '#1B1E24' : '#6E7682'
+    }));
+
+    const permDefs = [
+      ['notifications', 'Notifications', 'So alarms appear on your lock screen.', 'Allow'],
+      ['sound', 'Sound and time-sensitive alerts', 'So important alarms show up immediately.', 'Allow'],
+      ['flash', 'Flash and vibration', 'For visual and silent alert options.', 'Set up']
+    ];
+    const permissions = permDefs.map(([key, title, body, action]) => ({
+      title, body, action,
+      granted: !!s.perms[key], pending: !s.perms[key],
+      grant: () => this.setState(st => ({ perms: Object.assign({}, st.perms, { [key]: true }) }))
+    }));
+
+    // countdown to Sat 8 Aug 2026 09:00
+    const target = new Date(2026, 7, 8, 9, 0, 0).getTime();
+    let diff = Math.max(0, target - s.now);
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const countdown = d > 0 ? 'in ' + d + (d === 1 ? ' day, ' : ' days, ') + h + (h === 1 ? ' hour' : ' hours')
+                            : 'in ' + h + ' hours, ' + m + ' min';
+
+    const groups = [
+      { label: 'Fri 14 Aug', alarms: [
+        this.row({ time: '07:30', date: '14 Aug', label: 'Gym — two Fridays', tallyCount: 3, tallyFired: s.gymFired, next: true,
+          skip: () => this.setState(st => ({ gymFired: st.gymFired >= 3 ? 0 : st.gymFired + 1 })) }),
+        this.row({ time: '13:00', date: '14 Aug', label: 'Dentist' })
+      ]},
+      { label: 'Next week', alarms: [
+        this.row({ time: '06:45', date: '18 Aug', label: 'Standup', forever: true }),
+        this.row({ time: '09:15', date: '18 Aug', label: 'Take medication', overflow: '×12', tallyCount: 4, tallyFired: 0 }),
+        this.row({ time: '20:00', date: '30 Aug', label: 'Renew insurance', on: false })
+      ]}
+    ];
+
+    const lightRows = [
+      this.row({ time: '07:30', date: '14 Aug', label: 'Gym — two Fridays', tallyCount: 2, tallyFired: 0, next: true }),
+      this.row({ time: '13:00', date: '14 Aug', label: 'Dentist' }),
+      this.row({ time: '20:00', date: '30 Aug', label: 'Renew insurance', on: false })
+    ];
+
+    const dayKeys = ['M', 'T', 'W', 'T2', 'F', 'S', 'S2'];
+    const weekdays = dayKeys.map(k => {
+      const on = !!s.days[k];
+      return {
+        label: k[0], bg: on ? '#FFC24B' : 'transparent', fg: on ? '#1B1E24' : '#6E7682',
+        toggle: () => this.setState(st => {
+          const days = Object.assign({}, st.days);
+          if (days[k]) { delete days[k]; } else { days[k] = true; }
+          return { days };
+        })
+      };
+    });
+    const lightWeekdays = dayKeys.map(k => ({
+      label: k[0], bg: k === 'F' ? '#FFC24B' : 'transparent', fg: k === 'F' ? '#1B1E24' : '#6E7682'
+    }));
+
+    const hasRepeat = Object.keys(s.days).length > 0;
+    const notForever = !s.forever;
+    const count = s.count;
+    const strokes = [];
+    for (let i = 0; i < Math.min(count, 6); i++) {
+      strokes.push({
+        color: i === 0 ? '#FFC24B' : '#F2F3F5',
+        struck: false,
+        tap: () => this.setState({ count: i + 1 })
+      });
+    }
+
+    const fridays = ['Friday 14 August', 'Friday 21 August', 'Friday 28 August', 'Friday 4 September', 'Friday 11 September', 'Friday 18 September'];
+    let confirmCopy;
+    if (!hasRepeat) confirmCopy = 'Does not repeat.';
+    else if (s.forever) confirmCopy = 'Every Friday, with no end date.';
+    else if (count === 1) confirmCopy = fridays[0] + ' 2026 only.';
+    else if (count <= 3) confirmCopy = fridays.slice(0, count - 1).join(', ') + ' and ' + fridays[count - 1] + ' 2026 only.';
+    else confirmCopy = 'The next ' + count + ' Fridays, ending ' + fridays[Math.min(count, 6) - 1] + ' 2026.';
+
+    const alarmDays = { 8: 1, 14: 2, 18: 2, 21: 1, 30: 1 };
+    const monthCal = [];
+    for (let i = 0; i < 5; i++) monthCal.push({ n: '', fg: '#6E7682', bg: 'transparent', ring: '0.5px solid transparent', tap: () => {} });
+    for (let n = 1; n <= 31; n++) {
+      const sel = s.selectedDay === n;
+      const c = alarmDays[n];
+      monthCal.push({
+        n: String(n),
+        fg: n === 6 ? '#FFC24B' : '#F2F3F5',
+        bg: sel ? '#252A32' : 'transparent',
+        ring: n === 6 ? '0.5px solid #FFC24B' : '0.5px solid transparent',
+        dot: c === 1, count: c > 1 ? String(c) : null,
+        tap: () => this.setState({ selectedDay: n })
+      });
+    }
+
+    const miniCal = [];
+    for (let i = 0; i < 5; i++) miniCal.push({ n: '', fg: '#6E7682', bg: 'transparent' });
+    for (let n = 1; n <= 31; n++) {
+      miniCal.push({
+        n: String(n),
+        fg: n === 14 ? '#1B1E24' : (n < 6 ? '#6E768280' : '#F2F3F5'),
+        bg: n === 14 ? '#FFC24B' : 'transparent'
+      });
+    }
+
+    const daySets = {
+      8: [{ time: '09:00', label: 'Passport photos', meta: 'once' }],
+      14: [{ time: '07:30', label: 'Gym — two Fridays', meta: '2 left' }, { time: '13:00', label: 'Dentist', meta: 'once' }],
+      18: [{ time: '06:45', label: 'Standup', meta: '∞' }, { time: '09:15', label: 'Take medication', meta: '×12' }],
+      21: [{ time: '07:30', label: 'Gym — two Fridays', meta: '1 left' }],
+      30: [{ time: '20:00', label: 'Renew insurance', meta: 'off' }]
+    };
+    const selectedAlarms = daySets[s.selectedDay] || [];
+    const selectedLabel = (selectedAlarms.length ? '' : 'No alarms — ') + s.selectedDay + ' August 2026';
+
+    const nagTotal = 15 * 60 * 1000;
+    const elapsed = s.nagStart ? Math.min(nagTotal, s.now - s.nagStart) : 0;
+    const remainMin = Math.max(0, Math.ceil((nagTotal - elapsed) / 60000));
+    const nagWidth = (100 - (elapsed / nagTotal) * 100).toFixed(2) + '%';
+
+    const appearance = ['System', 'Light', 'Dark'].map(label => ({
+      label,
+      bg: s.appearance === label ? '#252A32' : 'transparent',
+      fg: s.appearance === label ? '#F2F3F5' : '#6E7682',
+      pick: () => this.setState({ appearance: label })
+    }));
+
+    return {
+      navItems, permissions, countdown, groups, lightRows, weekdays, lightWeekdays,
+      isOnboarding: screen === 'onboarding', isList: screen === 'list', isCreate: screen === 'create',
+      isFiring: screen === 'firing', isCalendar: screen === 'calendar', isSettings: screen === 'settings',
+      goList: this.go('list'), goCreate: this.go('create'), goFiring: this.go('firing'), goCalendar: this.go('calendar'),
+      hasRepeat, notForever, strokes, count,
+      canAdd: count < 6,
+      showNumeric: count >= 6,
+      addStroke: () => this.setState(st => ({ count: Math.min(24, st.count + 1) })),
+      leftLabel: count + ' left',
+      toggleForever: () => this.setState(st => ({ forever: !st.forever })),
+      foreverFg: s.forever ? '#F2F3F5' : '#6E7682',
+      foreverTrack: s.forever ? '#FFC24B' : '#6E768259',
+      foreverKnob: s.forever ? '#1B1E24' : '#6E7682',
+      foreverPos: s.forever ? 'flex-end' : 'flex-start',
+      confirmCopy,
+      flashOn: s.flashOn,
+      toggleFlash: () => this.setState(st => ({ flashOn: !st.flashOn })),
+      flashTrack: s.flashOn ? '#FFC24B' : '#6E768259',
+      flashKnob: s.flashOn ? '#1B1E24' : '#6E7682',
+      flashPos: s.flashOn ? 'flex-end' : 'flex-start',
+      monthCal, miniCal, selectedAlarms, selectedLabel,
+      nagWidth, nagLabel: 'Stops nagging in ' + remainMin + ' min',
+      appearance
+    };
+  }
+}
+</script>
+</body>
+</html>

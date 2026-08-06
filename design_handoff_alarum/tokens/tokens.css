@@ -1,0 +1,38 @@
+:root {
+  /* Colour — brief section 3 */
+  --alarum-graphite: #1B1E24; /* dark surface, icon ground, light-mode ink */
+  --alarum-slate:    #252A32; /* dark-mode raised card */
+  --alarum-chalk:    #F2F3F5; /* light-mode surface, dark-mode ink */
+  --alarum-steel:    #6E7682; /* secondary text, hairlines, fired strokes */
+  --alarum-sodium:   #FFC24B; /* single accent: what happens next */
+  --alarum-rust:     #C2402F; /* destructive / unavailable only */
+
+  /* Light-mode raised card + inactive track, derived from Chalk/Steel.
+     Not in the brief; introduced because light mode needs one step of
+     elevation and Slate is too dark against Chalk. */
+  --alarum-chalk-raised: #E4E6EA;
+  --alarum-track-off:    #D3D6DC;
+
+  /* Hairline: Steel at 30% */
+  --alarum-hairline: rgba(110, 118, 130, 0.35);
+
+  /* Type */
+  --alarum-font-ui: 'Archivo', system-ui, sans-serif;
+  --alarum-font-display: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Type scale */
+  --alarum-text-40: 40px;
+  --alarum-text-28: 28px;
+  --alarum-text-20: 20px;
+  --alarum-text-16: 16px;
+  --alarum-text-13: 13px;
+  --alarum-text-11: 11px;
+
+  /* Geometry */
+  --alarum-radius-card: 14px;
+  --alarum-radius-control: 10px;
+  --alarum-radius-chip: 8px;
+  --alarum-gutter: 20px;
+  --alarum-space: 8px;
+  --alarum-strike-duration: 200ms;
+}

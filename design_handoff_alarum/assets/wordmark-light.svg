@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="160" viewBox="0 0 560 160" fill="none">
+  <g transform="translate(0,20) scale(0.1171875)"><path d="M166.4 832 L512 166.4 L857.6 832" stroke="#1B1E24" stroke-width="70.4" stroke-linecap="round" stroke-linejoin="round"></path>
+  <path d="M236.8 608 H787.2" stroke="#FFC24B" stroke-width="70.4" stroke-linecap="round"></path></g>
+  <text x="152" y="86" font-family="Archivo" font-weight="500" font-size="96" letter-spacing="-0.96" fill="#1B1E24">alarum</text>
+  <rect x="437" y="66" width="42" height="8" rx="4" fill="#FFC24B"></rect>
+</svg>

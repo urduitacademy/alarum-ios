@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#0E1014; font-family:'Archivo',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:#FFC24B; text-decoration:none; }
+  a:hover { color:#FFD584; }
+</style>
+</helmet>
+
+<div style="padding:56px 64px 96px;display:flex;flex-direction:column;gap:64px;max-width:1440px">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="font-size:11px;color:#6E7682;letter-spacing:0.4px">Alarum — identity and component spec</div>
+    <div style="font-size:40px;color:#F2F3F5;font-weight:500;letter-spacing:-0.8px">Struck A, alternates, tally row</div>
+    <div style="font-size:16px;color:#6E7682;max-width:640px;line-height:1.55">Every element is a stroke: rounded caps, equal weight, no fills, no gradients, no glow. The amber crossbar always extends past what it strikes.</div>
+  </div>
+
+  <!-- APP ICON -->
+  <div style="display:flex;flex-direction:column;gap:20px">
+    <div style="font-size:20px;color:#F2F3F5;font-weight:500">1 — App icon</div>
+    <div style="display:flex;gap:48px;align-items:flex-end;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="width:320px;height:320px;border-radius:72px;background:#1B1E24;display:flex;align-items:center;justify-content:center">
+          <svg width="160" height="160" viewBox="0 0 160 160" fill="none">
+            <path d="M26 130 L80 26 L134 130" stroke="#F2F3F5" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M37 95 H123" stroke="#FFC24B" stroke-width="11" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E7682">1024pt · Graphite squircle · mark inset 25%</div>
+      </div>
+
+      <div style="display:flex;gap:24px;align-items:flex-end">
+        <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+          <div style="width:53px;height:53px;border-radius:12px;background:#1B1E24;display:flex;align-items:center;justify-content:center">
+            <svg width="27" height="27" viewBox="0 0 160 160" fill="none">
+              <path d="M34 126 L80 34 L126 126" stroke="#F2F3F5" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M39 95 H121" stroke="#FFC24B" stroke-width="15" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E7682">40pt</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+          <div style="width:106px;height:106px;border-radius:24px;background:#1B1E24;display:flex;align-items:center;justify-content:center">
+            <svg width="54" height="54" viewBox="0 0 160 160" fill="none">
+              <path d="M34 126 L80 34 L126 126" stroke="#F2F3F5" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M39 95 H121" stroke="#FFC24B" stroke-width="14" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E7682">80pt</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+          <div style="width:53px;height:53px;border-radius:12px;background:#F2F3F5;display:flex;align-items:center;justify-content:center">
+            <svg width="27" height="27" viewBox="0 0 160 160" fill="none">
+              <path d="M34 126 L80 34 L126 126" stroke="#1B1E24" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M39 95 H121" stroke="#FFC24B" stroke-width="15" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E7682">40pt inverted</div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:#6E7682;max-width:640px;line-height:1.55">At 40pt the legs are shortened rather than the bar thinned, so the strike survives. The counter under the apex stays open at every size.</div>
+  </div>
+
+  <div style="height:0.5px;background:#6E768259"></div>
+
+  <!-- WORDMARK -->
+  <div style="display:flex;flex-direction:column;gap:20px">
+    <div style="font-size:20px;color:#F2F3F5;font-weight:500">2 — Wordmark</div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap">
+      <div style="flex:1;min-width:420px;background:#1B1E24;border-radius:14px;padding:56px;display:flex;flex-direction:column;gap:36px;border:0.5px solid #6E768259">
+        <div style="display:flex;align-items:center;gap:20px">
+          <svg width="44" height="44" viewBox="0 0 40 40" fill="none">
+            <path d="M9 31 L20 9 L31 31" stroke="#F2F3F5" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M11.6 23.2 H28.4" stroke="#FFC24B" stroke-width="3.2" stroke-linecap="round"/>
+          </svg>
+          <div style="font-size:48px;color:#F2F3F5;font-weight:500;letter-spacing:-0.48px;display:flex">alar<span style="position:relative">u<span style="position:absolute;left:2px;right:2px;top:57%;height:4px;background:#FFC24B;border-radius:2px"></span></span>m</div>
+        </div>
+        <div style="font-size:13px;color:#6E7682">Lock-up, dark. Archivo Medium, tracking −1%.</div>
+      </div>
+      <div style="flex:1;min-width:420px;background:#F2F3F5;border-radius:14px;padding:56px;display:flex;flex-direction:column;gap:36px">
+        <div style="display:flex;align-items:center;gap:20px">
+          <svg width="44" height="44" viewBox="0 0 40 40" fill="none">
+            <path d="M9 31 L20 9 L31 31" stroke="#1B1E24" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M11.6 23.2 H28.4" stroke="#FFC24B" stroke-width="3.2" stroke-linecap="round"/>
+          </svg>
+          <div style="font-size:48px;color:#1B1E24;font-weight:500;letter-spacing:-0.48px;display:flex">alar<span style="position:relative">u<span style="position:absolute;left:2px;right:2px;top:57%;height:4px;background:#FFC24B;border-radius:2px"></span></span>m</div>
+        </div>
+        <div style="font-size:13px;color:#6E7682">Lock-up, light. Legs invert to Graphite; the bar never changes.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;padding-top:4px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#F2F3F5;background:#252A32;border-radius:8px;padding:10px 14px">Alarum — alarms with an end date</div>
+      <div style="font-size:13px;color:#6E7682">Store subtitle. Always carried with the name.</div>
+    </div>
+  </div>
+
+  <div style="height:0.5px;background:#6E768259"></div>
+
+  <!-- ALTERNATES -->
+  <div style="display:flex;flex-direction:column;gap:20px">
+    <div style="font-size:20px;color:#F2F3F5;font-weight:500">3 — Three marks, compared</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px">
+
+      <div style="background:#252A32;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:220px;background:#1B1E24;display:flex;align-items:center;justify-content:center">
+          <svg width="104" height="104" viewBox="0 0 160 160" fill="none">
+            <path d="M26 130 L80 26 L134 130" stroke="#F2F3F5" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M37 95 H123" stroke="#FFC24B" stroke-width="11" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="font-size:16px;color:#F2F3F5;font-weight:500">Struck A</div>
+            <div style="font-size:11px;color:#1B1E24;background:#FFC24B;border-radius:8px;padding:3px 8px">Recommended</div>
+          </div>
+          <div style="font-size:13px;color:#6E7682;line-height:1.5">Monogram plus the counted-repeat gesture. Holds up at 40pt and in a grid of round bells.</div>
+          <div style="display:flex;gap:10px;padding-top:6px">
+            <div style="width:40px;height:40px;border-radius:10px;background:#1B1E24;display:flex;align-items:center;justify-content:center">
+              <svg width="22" height="22" viewBox="0 0 160 160" fill="none"><path d="M34 126 L80 34 L126 126" stroke="#F2F3F5" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/><path d="M39 95 H121" stroke="#FFC24B" stroke-width="15" stroke-linecap="round"/></svg>
+            </div>
+            <div style="width:40px;height:40px;border-radius:10px;background:#F2F3F5;display:flex;align-items:center;justify-content:center">
+              <svg width="22" height="22" viewBox="0 0 160 160" fill="none"><path d="M34 126 L80 34 L126 126" stroke="#1B1E24" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/><path d="M39 95 H121" stroke="#FFC24B" stroke-width="15" stroke-linecap="round"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#252A32;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:220px;background:#1B1E24;display:flex;align-items:center;justify-content:center">
+          <svg width="104" height="104" viewBox="0 0 160 160" fill="none">
+            <path d="M46 112 C46 74 52 44 80 36 C108 44 114 74 114 112" stroke="#F2F3F5" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M40 112 H120" stroke="#F2F3F5" stroke-width="11" stroke-linecap="round"/>
+            <circle cx="80" cy="128" r="7" fill="#F2F3F5"/>
+            <path d="M28 82 H132" stroke="#FFC24B" stroke-width="11" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:16px;color:#F2F3F5;font-weight:500">Struck bell</div>
+          <div style="font-size:13px;color:#6E7682;line-height:1.5">Leans on what alarum literally means. Warmer and read instantly, but a bell in an icon grid is a bell.</div>
+          <div style="display:flex;gap:10px;padding-top:6px">
+            <div style="width:40px;height:40px;border-radius:10px;background:#1B1E24;display:flex;align-items:center;justify-content:center">
+              <svg width="22" height="22" viewBox="0 0 160 160" fill="none">
+                <path d="M50 110 C50 76 56 48 80 40 C104 48 110 76 110 110" stroke="#F2F3F5" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M44 110 H116" stroke="#F2F3F5" stroke-width="15" stroke-linecap="round"/>
+                <path d="M34 82 H126" stroke="#FFC24B" stroke-width="15" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div style="width:40px;height:40px;border-radius:10px;background:#F2F3F5;display:flex;align-items:center;justify-content:center">
+              <svg width="22" height="22" viewBox="0 0 160 160" fill="none">
+                <path d="M50 110 C50 76 56 48 80 40 C104 48 110 76 110 110" stroke="#1B1E24" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M44 110 H116" stroke="#1B1E24" stroke-width="15" stroke-linecap="round"/>
+                <path d="M34 82 H126" stroke="#FFC24B" stroke-width="15" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#252A32;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:220px;background:#1B1E24;display:flex;align-items:center;justify-content:center">
+          <svg width="104" height="104" viewBox="0 0 160 160" fill="none">
+            <path d="M50 34 V126" stroke="#F2F3F5" stroke-width="11" stroke-linecap="round"/>
+            <path d="M80 34 V126" stroke="#F2F3F5" stroke-width="11" stroke-linecap="round"/>
+            <path d="M110 34 V126" stroke="#F2F3F5" stroke-width="11" stroke-linecap="round"/>
+            <path d="M30 116 L130 44" stroke="#FFC24B" stroke-width="11" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:16px;color:#F2F3F5;font-weight:500">Tally strike</div>
+          <div style="font-size:13px;color:#6E7682;line-height:1.5">The counted-repeat idea with nothing else in it. Strongest product story, no link to the name.</div>
+          <div style="display:flex;gap:10px;padding-top:6px">
+            <div style="width:40px;height:40px;border-radius:10px;background:#1B1E24;display:flex;align-items:center;justify-content:center">
+              <svg width="22" height="22" viewBox="0 0 160 160" fill="none">
+                <path d="M52 42 V118" stroke="#F2F3F5" stroke-width="15" stroke-linecap="round"/>
+                <path d="M80 42 V118" stroke="#F2F3F5" stroke-width="15" stroke-linecap="round"/>
+                <path d="M108 42 V118" stroke="#F2F3F5" stroke-width="15" stroke-linecap="round"/>
+                <path d="M36 112 L124 50" stroke="#FFC24B" stroke-width="15" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div style="width:40px;height:40px;border-radius:10px;background:#F2F3F5;display:flex;align-items:center;justify-content:center">
+              <svg width="22" height="22" viewBox="0 0 160 160" fill="none">
+                <path d="M52 42 V118" stroke="#1B1E24" stroke-width="15" stroke-linecap="round"/>
+                <path d="M80 42 V118" stroke="#1B1E24" stroke-width="15" stroke-linecap="round"/>
+                <path d="M108 42 V118" stroke="#1B1E24" stroke-width="15" stroke-linecap="round"/>
+                <path d="M36 112 L124 50" stroke="#FFC24B" stroke-width="15" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:0.5px;background:#6E768259"></div>
+
+  <!-- TALLY SPEC -->
+  <div style="display:flex;flex-direction:column;gap:20px">
+    <div style="font-size:20px;color:#F2F3F5;font-weight:500">4 — Tally row, component spec</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+      <sc-for list="{{ strokeStates }}" as="st" hint-placeholder-count="4">
+        <div style="background:#252A32;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:20px">
+          <div style="height:64px;display:flex;align-items:center">
+            <div style="position:relative;width:20px;height:56px;display:flex;align-items:center;justify-content:center">
+              <div style="width:4px;height:48px;border-radius:2px;background:{{ st.color }}"></div>
+              <sc-if value="{{ st.struck }}"><div style="position:absolute;width:30px;height:4px;border-radius:2px;background:#6E7682;transform:rotate(-38deg)"></div></sc-if>
+              <sc-if value="{{ st.infinity }}"><div style="position:absolute;font-family:'IBM Plex Mono',monospace;font-size:28px;color:#6E7682">∞</div></sc-if>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-size:16px;color:#F2F3F5;font-weight:500">{{ st.name }}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E7682">{{ st.token }}</div>
+            <div style="font-size:13px;color:#6E7682;line-height:1.5">{{ st.note }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;padding-top:8px">
+      <div style="background:#1B1E24;border:0.5px solid #6E768259;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:18px">
+        <div style="font-size:13px;color:#6E7682">Progression — every Friday, 3 times</div>
+        <sc-for list="{{ progression }}" as="p" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="flex:1;font-size:13px;color:#F2F3F5">Every Friday</div>
+            <div style="display:flex;gap:8px;align-items:center;width:74px">
+              <sc-for list="{{ p.strokes }}" as="t" hint-placeholder-count="3">
+                <div style="position:relative;width:8px;height:24px;display:flex;align-items:center;justify-content:center">
+                  <div style="width:2px;height:22px;border-radius:1px;background:{{ t.color }}"></div>
+                  <sc-if value="{{ t.struck }}"><div style="position:absolute;width:15px;height:2px;border-radius:1px;background:#6E7682;transform:rotate(-38deg)"></div></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#6E7682;width:56px;text-align:right">{{ p.left }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background:#1B1E24;border:0.5px solid #6E768259;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:18px">
+        <div style="font-size:13px;color:#6E7682">Edge cases</div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="flex:1;font-size:13px;color:#F2F3F5">Above six occurrences</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div style="width:2px;height:22px;border-radius:1px;background:#FFC24B"></div>
+            <div style="width:2px;height:22px;border-radius:1px;background:#F2F3F5"></div>
+            <div style="width:2px;height:22px;border-radius:1px;background:#F2F3F5"></div>
+            <div style="width:2px;height:22px;border-radius:1px;background:#F2F3F5"></div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E7682;padding-left:4px">×12</div>
+          </div>
+        </div>
+        <div style="height:0.5px;background:#6E768259"></div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="flex:1;font-size:13px;color:#F2F3F5">Repeats forever</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:16px;color:#6E7682">∞</div>
+        </div>
+        <div style="height:0.5px;background:#6E768259"></div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="flex:1;font-size:13px;color:#F2F3F5">Does not repeat</div>
+          <div style="font-size:13px;color:#6E7682">no row</div>
+        </div>
+        <div style="height:0.5px;background:#6E768259"></div>
+        <div style="font-size:13px;color:#6E7682;line-height:1.55">On firing, the strike draws over 200ms. Under <span style="font-family:'IBM Plex Mono',monospace">prefers-reduced-motion</span> it cross-fades. It is the only non-standard animation in the app.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:0.5px;background:#6E768259"></div>
+
+  <!-- TOKENS -->
+  <div style="display:flex;flex-direction:column;gap:20px">
+    <div style="font-size:20px;color:#F2F3F5;font-weight:500">5 — Tokens</div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:16px">
+      <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="6">
+        <div style="background:#252A32;border-radius:14px;overflow:hidden">
+          <div style="height:88px;background:{{ t.hex }};border-bottom:0.5px solid #6E768259"></div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:6px">
+            <div style="font-size:16px;color:#F2F3F5;font-weight:500">{{ t.name }}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E7682">{{ t.hex }}</div>
+            <div style="font-size:13px;color:#6E7682;line-height:1.45">{{ t.role }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;gap:48px;flex-wrap:wrap;padding-top:8px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:13px;color:#6E7682">Display face — IBM Plex Mono Medium, tabular</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:40px;color:#F2F3F5;font-weight:500">07:30 <span style="font-size:24px;color:#6E7682">AM</span></div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;color:#6E7682">14 Aug 2026 · in 2 days, 14 hours</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:13px;color:#6E7682">UI face — Archivo Regular / Medium</div>
+        <div style="font-size:28px;color:#F2F3F5;font-weight:500">Set it for the 14th</div>
+        <div style="font-size:16px;color:#6E7682">40 / 28 / 20 / 16 / 13 / 11 · sentence case · two weights</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  renderVals() {
+    const stroke = (kind) => ({
+      remaining: { color: '#F2F3F5', struck: false },
+      next: { color: '#FFC24B', struck: false },
+      fired: { color: '#6E7682', struck: true },
+      inactive: { color: '#6E768259', struck: false, infinity: true }
+    })[kind];
+
+    const strokeStates = [
+      { name: 'Remaining', token: 'Chalk · #F2F3F5', note: 'An occurrence still to come. Graphite in light mode.', color: '#F2F3F5', struck: false },
+      { name: 'Next', token: 'Sodium · #FFC24B', note: 'The one that happens next. Exactly one per row.', color: '#FFC24B', struck: false },
+      { name: 'Fired', token: 'Steel · #6E7682', note: 'Struck through in Steel at the same weight.', color: '#6E7682', struck: true },
+      { name: 'Forever', token: 'Steel · ∞', note: 'No strokes drawn. Plex Mono infinity in Steel.', color: 'transparent', struck: false, infinity: true }
+    ];
+
+    const seq = [[0, '3 left'], [1, '2 left'], [2, '1 left']];
+    const progression = seq.map(([fired, left]) => ({
+      left,
+      strokes: [0, 1, 2].map(i => ({
+        color: i < fired ? '#6E7682' : (i === fired ? '#FFC24B' : '#F2F3F5'),
+        struck: i < fired
+      }))
+    }));
+
+    const tokens = [
+      { name: 'Graphite', hex: '#1B1E24', role: 'Dark surface, icon ground, light-mode ink' },
+      { name: 'Slate', hex: '#252A32', role: 'Raised card in dark mode' },
+      { name: 'Chalk', hex: '#F2F3F5', role: 'Light surface. Cool, never cream' },
+      { name: 'Steel', hex: '#6E7682', role: 'Secondary text, hairlines, fired strokes' },
+      { name: 'Sodium', hex: '#FFC24B', role: 'The single accent — what happens next' },
+      { name: 'Rust', hex: '#C2402F', role: 'Destructive and unavailable only' }
+    ];
+
+    return { strokeStates, progression, tokens };
+  }
+}
+</script>
+</body>
+</html>
