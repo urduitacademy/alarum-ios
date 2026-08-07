@@ -29,7 +29,7 @@ This repository contains the product requirements, design handoff package, and a
 
 ## MVP Build Direction
 
-Build a native SwiftUI iPhone app using the handoff as the source of truth for layout, copy, tokens, and interaction behavior.
+Build the MVP with Expo/EAS using the handoff as the source of truth for layout, copy, tokens, and interaction behavior. The pure SwiftUI scaffold remains in the repository as a native fallback/reference.
 
 ## Current App Scaffold
 
@@ -44,4 +44,4 @@ The first app build is intentionally small. Its job is to prove TestFlight deliv
 
 - [expo-feasibility](expo-feasibility) - separate Expo app for testing whether EAS can build and submit Alarum to TestFlight from Windows.
 
-This does not replace the native SwiftUI scaffold. It is a build pipeline proof for the Windows + iPhone workflow.
+This path successfully built, submitted, installed through TestFlight, and passed the first real-device notification tests. It is now the active MVP implementation path.

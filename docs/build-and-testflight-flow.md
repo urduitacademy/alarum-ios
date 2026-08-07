@@ -120,6 +120,13 @@ First real-device notification results:
 - In normal ring mode, the one-minute notification produced an audible sound and lock-screen alert.
 - In Silent Mode, the one-minute notification still produced vibration and an audible sound during this test.
 - These results suggest the Expo/EAS feasibility route is viable enough to continue evaluating for the MVP, while still documenting that iOS system behavior can vary by settings, Focus, notification permissions, and Apple policy.
+- Follow-up tests also passed for Focus/Do Not Disturb, locked-phone delivery after waiting, fully closed app delivery, and Snooze/Stop behavior.
+
+MVP stack decision after feasibility testing:
+
+- Use Expo/EAS as the active MVP build path.
+- Keep the pure SwiftUI scaffold in the repo as a fallback/reference path.
+- Continue to be honest in product copy that iOS behavior can vary by device settings and Apple policy.
 
 ### Option 3: Mac CI Provider
 

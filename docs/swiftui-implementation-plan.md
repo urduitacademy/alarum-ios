@@ -10,6 +10,10 @@ Update after feasibility testing:
 
 An Expo/EAS feasibility app was successfully built, submitted to TestFlight, installed on the owner's iPhone, and used to test local notification behavior. The Expo/EAS route is now a viable candidate for the MVP build, especially because the owner does not have a MacBook. The final stack decision should compare Expo/EAS delivery speed against pure SwiftUI control after more notification and UI tests.
 
+Final MVP direction after follow-up tests:
+
+The Expo/EAS route passed the initial notification tests, including normal ring mode, Silent Mode, Focus/Do Not Disturb, locked-phone delivery, fully closed app delivery, and Snooze/Stop behavior. The MVP should proceed with Expo/EAS as the active implementation path. The pure SwiftUI scaffold remains valuable as a native fallback/reference, but it is no longer the primary MVP path.
+
 ## Build Principles
 
 - iPhone first.
