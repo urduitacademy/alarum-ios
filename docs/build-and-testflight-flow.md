@@ -89,6 +89,14 @@ Current repo status:
 - This app uses the same Alarum bundle identifier, `com.alarum.app`, and must be connected to a new Alarum EAS project, not the existing UITA EAS project.
 - The first Expo/EAS test should prove TestFlight upload and local notification behavior only.
 
+First successful EAS build:
+
+- Project: `@dinovaux/alarum-ios-feasibility`
+- EAS project ID: `e3a09e66-e095-430d-8816-445740e179bd`
+- Build ID: `da16520b-cecb-471d-bc71-7a5e1d165164`
+- Build logs: https://expo.dev/accounts/dinovaux/projects/alarum-ios-feasibility/builds/da16520b-cecb-471d-bc71-7a5e1d165164
+- IPA artifact: https://expo.dev/artifacts/eas/_76CYGK9FtYchrbjYhtGCGkcOF82ln5nIVFmXIVKcM4.ipa
+
 ### Option 3: Mac CI Provider
 
 Examples:
