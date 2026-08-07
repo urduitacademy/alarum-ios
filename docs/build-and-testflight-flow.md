@@ -109,6 +109,12 @@ First EAS submit attempt:
 - Internal TestFlight access enabled for: `kashifspost@gmail.com`
 - App Store Connect API key created by EAS for submit: `NK4S577D39`
 
+First TestFlight install:
+
+- Build `0.1.0 (3)` was installed successfully on the owner's iPhone through TestFlight.
+- Initial app launch confirmed notification permission was granted.
+- The app showed `3` scheduled notifications after scheduling the feasibility test.
+
 ### Option 3: Mac CI Provider
 
 Examples:
