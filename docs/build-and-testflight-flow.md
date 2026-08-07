@@ -115,6 +115,12 @@ First TestFlight install:
 - Initial app launch confirmed notification permission was granted.
 - The app showed `3` scheduled notifications after scheduling the feasibility test.
 
+First real-device notification results:
+
+- In normal ring mode, the one-minute notification produced an audible sound and lock-screen alert.
+- In Silent Mode, the one-minute notification still produced vibration and an audible sound during this test.
+- These results suggest the Expo/EAS feasibility route is viable enough to continue evaluating for the MVP, while still documenting that iOS system behavior can vary by settings, Focus, notification permissions, and Apple policy.
+
 ### Option 3: Mac CI Provider
 
 Examples:

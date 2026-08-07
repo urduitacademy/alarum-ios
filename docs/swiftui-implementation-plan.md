@@ -6,6 +6,10 @@ Build Alarum as a native iOS SwiftUI app first.
 
 Reason: Alarum depends on iOS-specific alarm and notification behavior. Native SwiftUI gives the cleanest access to local notifications, Time Sensitive alerts, notification actions, settings links, persistence, and future Apple-specific features.
 
+Update after feasibility testing:
+
+An Expo/EAS feasibility app was successfully built, submitted to TestFlight, installed on the owner's iPhone, and used to test local notification behavior. The Expo/EAS route is now a viable candidate for the MVP build, especially because the owner does not have a MacBook. The final stack decision should compare Expo/EAS delivery speed against pure SwiftUI control after more notification and UI tests.
+
 ## Build Principles
 
 - iPhone first.
