@@ -83,6 +83,12 @@ Risk:
 
 - Alarum is planned as pure SwiftUI, not React Native/Expo. Before relying on EAS, we must prove that a minimal SwiftUI/Xcode project can build and submit successfully through EAS in a separate Alarum project.
 
+Current repo status:
+
+- A separate `expo-feasibility/` app has been added to test the Expo/EAS route without overwriting the native SwiftUI scaffold.
+- This app uses the same Alarum bundle identifier, `com.alarum.app`, and must be connected to a new Alarum EAS project, not the existing UITA EAS project.
+- The first Expo/EAS test should prove TestFlight upload and local notification behavior only.
+
 ### Option 3: Mac CI Provider
 
 Examples:
@@ -150,4 +156,3 @@ This avoids investing in the full app before the distribution pipeline is proven
 - Expo first build guide: https://docs.expo.dev/build/setup/
 - Apple upload builds: https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds/
 - Apple Developer Program: https://developer.apple.com/programs/
-

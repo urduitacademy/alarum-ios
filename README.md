@@ -39,3 +39,9 @@ Build a native SwiftUI iPhone app using the handoff as the source of truth for l
 - [Alarum/NotificationManager.swift](Alarum/NotificationManager.swift) - local notification permission and scheduling test logic.
 
 The first app build is intentionally small. Its job is to prove TestFlight delivery and iOS notification behavior before the full MVP UI is implemented.
+
+## Expo/EAS Feasibility Path
+
+- [expo-feasibility](expo-feasibility) - separate Expo app for testing whether EAS can build and submit Alarum to TestFlight from Windows.
+
+This does not replace the native SwiftUI scaffold. It is a build pipeline proof for the Windows + iPhone workflow.

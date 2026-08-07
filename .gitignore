@@ -10,6 +10,9 @@ build/
 .build/
 .swiftpm/
 
+# JavaScript tooling
+node_modules/
+.pnpm-store/
+
 # macOS
 .DS_Store
-
