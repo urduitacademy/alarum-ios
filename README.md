@@ -4,7 +4,7 @@ Alarum is an iOS-first visual alarm app for future-date alarms and repeat-limite
 
 ## Current Project State
 
-This repository currently contains the product requirements and design handoff package. No app code has been started yet.
+This repository contains the product requirements, design handoff package, and a minimal native SwiftUI feasibility app.
 
 ## Key Documents
 
@@ -30,3 +30,12 @@ This repository currently contains the product requirements and design handoff p
 ## MVP Build Direction
 
 Build a native SwiftUI iPhone app using the handoff as the source of truth for layout, copy, tokens, and interaction behavior.
+
+## Current App Scaffold
+
+- [Alarum.xcodeproj](Alarum.xcodeproj) - minimal native iOS project.
+- [Alarum/AlarumApp.swift](Alarum/AlarumApp.swift) - SwiftUI app entry point.
+- [Alarum/ContentView.swift](Alarum/ContentView.swift) - feasibility screen.
+- [Alarum/NotificationManager.swift](Alarum/NotificationManager.swift) - local notification permission and scheduling test logic.
+
+The first app build is intentionally small. Its job is to prove TestFlight delivery and iOS notification behavior before the full MVP UI is implemented.

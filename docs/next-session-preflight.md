@@ -18,13 +18,13 @@ The first build should be intentionally small. It only needs to prove that a sep
 
 ## Recommended Alarum Identifiers
 
-Working values until changed:
+Confirmed working values:
 
 - App name: `Alarum`
 - Store subtitle: `Alarms with an end date`
-- Bundle identifier option: `com.alarum.app`
+- Bundle identifier: `com.alarum.app`
 - Internal project name: `Alarum`
-- Git repository name option: `alarum-ios`
+- Git repository name: `alarum-ios`
 
 Before creating external records, confirm the bundle identifier is available and owned by the Apple Developer account.
 
@@ -78,4 +78,3 @@ Design items needed before full MVP UI:
 3. Create or prepare the minimal SwiftUI project.
 4. Decide which cloud build path to try first.
 5. Prepare the first TestFlight feasibility target.
-
