@@ -97,6 +97,18 @@ First successful EAS build:
 - Build logs: https://expo.dev/accounts/dinovaux/projects/alarum-ios-feasibility/builds/da16520b-cecb-471d-bc71-7a5e1d165164
 - IPA artifact: https://expo.dev/artifacts/eas/_76CYGK9FtYchrbjYhtGCGkcOF82ln5nIVFmXIVKcM4.ipa
 
+First EAS submit attempt:
+
+- Submission ID: `1f5141c1-5cce-447c-add6-34e10d69ec3c`
+- Submission details: https://expo.dev/accounts/dinovaux/projects/alarum-ios-feasibility/submissions/1f5141c1-5cce-447c-add6-34e10d69ec3c
+- App Store Connect app ID: `6799144465`
+- Build submitted: `da16520b-cecb-471d-bc71-7a5e1d165164`
+- App version: `0.1.0`
+- Build number: `3`
+- TestFlight group created by EAS: `Team (Expo)`
+- Internal TestFlight access enabled for: `kashifspost@gmail.com`
+- App Store Connect API key created by EAS for submit: `NK4S577D39`
+
 ### Option 3: Mac CI Provider
 
 Examples:
