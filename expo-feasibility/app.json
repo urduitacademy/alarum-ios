@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Alarum",
-    "slug": "alarum-ios",
+    "slug": "alarum-ios-feasibility",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -27,8 +27,11 @@
       ]
     ],
     "extra": {
-      "purpose": "EAS/TestFlight feasibility build for Alarum"
-    }
+      "purpose": "EAS/TestFlight feasibility build for Alarum",
+      "eas": {
+        "projectId": "e3a09e66-e095-430d-8816-445740e179bd"
+      }
+    },
+    "owner": "dinovaux"
   }
 }
-
