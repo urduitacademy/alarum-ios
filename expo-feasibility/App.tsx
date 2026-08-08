@@ -29,6 +29,7 @@ const ALARM_CATEGORY = 'alarumAlarm';
 const ACTION_SNOOZE = 'snooze';
 const ACTION_STOP = 'stop';
 const MAX_PENDING_NOTIFICATIONS = 50;
+const MAX_NATIVE_OCCURRENCES_PER_ALARM = 4;
 const MAX_ALARM_DURATION_MINUTES = 15;
 const SNOOZE_MINUTES = 5;
 const WHEEL_ITEM_HEIGHT = 44;
@@ -269,25 +270,30 @@ export default function App() {
   }
 
   async function reconcileAlarmKitSchedule(nextAlarms: Alarm[]) {
-    await Promise.all(alarms.map((alarm) => AlarmKit.cancelAlarm(alarm.id).catch(() => undefined)));
+    const alarmsToCancel = dedupeAlarmsById([...alarms, ...nextAlarms]);
+
+    await Promise.all(
+      alarmsToCancel.flatMap((alarm) =>
+        Array.from({ length: MAX_NATIVE_OCCURRENCES_PER_ALARM }, (_, occurrenceIndex) =>
+          AlarmKit.cancelAlarm(nativeAlarmOccurrenceId(alarm.id, occurrenceIndex)).catch(() => undefined)
+        )
+      )
+    );
 
     let scheduled = 0;
 
     for (const alarm of nextAlarms) {
-      const occurrences = getUpcomingOccurrences(alarm, { maxOccurrences: 1 });
-      const occurrence = occurrences[0];
+      const occurrences = getUpcomingOccurrences(alarm, { maxOccurrences: MAX_NATIVE_OCCURRENCES_PER_ALARM });
 
-      if (!occurrence) {
-        continue;
+      for (const occurrence of occurrences) {
+        await AlarmKit.scheduleAlarm({
+          id: nativeAlarmOccurrenceId(alarm.id, occurrence.occurrenceIndex),
+          title: alarm.label || 'Alarum',
+          scheduledAt: occurrence.scheduledAt,
+          snoozeMinutes: SNOOZE_MINUTES,
+        });
+        scheduled += 1;
       }
-
-      await AlarmKit.scheduleAlarm({
-        id: alarm.id,
-        title: alarm.label || 'Alarum',
-        scheduledAt: occurrence.scheduledAt,
-        snoozeMinutes: SNOOZE_MINUTES,
-      });
-      scheduled += 1;
     }
 
     setNativeAlarmState(`AlarmKit scheduled ${scheduled}`);
@@ -1090,6 +1096,45 @@ function withTimeParts(date: Date, hour: number, minute: number): Date {
 
 function daysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
+}
+
+function dedupeAlarmsById(values: Alarm[]): Alarm[] {
+  const seen = new Set<string>();
+  return values.filter((alarm) => {
+    if (seen.has(alarm.id)) {
+      return false;
+    }
+
+    seen.add(alarm.id);
+    return true;
+  });
+}
+
+function nativeAlarmOccurrenceId(alarmId: string, occurrenceIndex: number): string {
+  const input = `${alarmId}:${occurrenceIndex}`;
+  const bytes = Array.from({ length: 16 }, (_, index) => hashByte(`${input}:${index}`));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.map((byte) => byte.toString(16).padStart(2, '0'));
+
+  return [
+    hex.slice(0, 4).join(''),
+    hex.slice(4, 6).join(''),
+    hex.slice(6, 8).join(''),
+    hex.slice(8, 10).join(''),
+    hex.slice(10, 16).join(''),
+  ].join('-');
+}
+
+function hashByte(input: string): number {
+  let hash = 2166136261;
+
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0) & 0xff;
 }
 
 function createUUID(): string {
