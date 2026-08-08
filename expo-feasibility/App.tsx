@@ -23,6 +23,7 @@ import {
   getUpcomingOccurrences,
 } from './src/alarms/occurrenceCalculator';
 import type { Alarm, AlarmLimit, Weekday } from './src/alarms/types';
+import * as AlarmKit from './modules/alarum-alarmkit';
 
 const ALARM_CATEGORY = 'alarumAlarm';
 const ACTION_SNOOZE = 'snooze';
@@ -60,14 +61,14 @@ type WheelOption = {
 
 const initialAlarms: Alarm[] = [
   makeAlarm({
-    id: 'gym-two-fridays',
+    id: '00000000-0000-4000-8000-000000000001',
     label: 'Gym',
     date: nextWeekdayAt(5, 9, 0),
     repeatWeekdays: [5],
     limit: { kind: 'count', occurrences: 2 },
   }),
   makeAlarm({
-    id: 'dentist-once',
+    id: '00000000-0000-4000-8000-000000000002',
     label: 'Dentist',
     date: addHours(new Date(), 3),
     repeatWeekdays: [],
@@ -108,9 +109,13 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('list');
   const [alarms, setAlarms] = useState<Alarm[]>(initialAlarms);
   const [draft, setDraft] = useState<DraftAlarm>(() => createDraft());
+  const [nativeAlarmState, setNativeAlarmState] = useState<string>('Checking AlarmKit');
 
   useEffect(() => {
     registerAlarmCategory();
+    AlarmKit.getAuthorizationState()
+      .then((state) => setNativeAlarmState(formatAlarmKitState(state)))
+      .catch(() => setNativeAlarmState('AlarmKit unavailable'));
 
     const response = Notifications.addNotificationResponseReceivedListener(async (event) => {
       const notificationId = event.notification.request.identifier;
@@ -196,12 +201,40 @@ export default function App() {
     return result.granted;
   }
 
+  async function ensureAlarmKitAuthorization() {
+    try {
+      const current = await AlarmKit.getAuthorizationState();
+
+      if (current === 'authorized') {
+        setNativeAlarmState('AlarmKit authorized');
+        return true;
+      }
+
+      if (current === 'unsupported') {
+        setNativeAlarmState('AlarmKit requires iOS 26');
+        return false;
+      }
+
+      const next = await AlarmKit.requestAuthorization();
+      setNativeAlarmState(formatAlarmKitState(next));
+      return next === 'authorized';
+    } catch (error) {
+      setNativeAlarmState('AlarmKit unavailable');
+      return false;
+    }
+  }
+
   async function reconcileSchedule(nextAlarms: Alarm[]) {
     await Notifications.cancelAllScheduledNotificationsAsync();
 
+    if (await ensureAlarmKitAuthorization()) {
+      await reconcileAlarmKitSchedule(nextAlarms);
+      return;
+    }
+
     const permissions = await Notifications.getPermissionsAsync();
 
-    if (!permissions.granted) {
+    if (!permissions.granted && !(await ensureNotificationPermission())) {
       return;
     }
 
@@ -233,6 +266,31 @@ export default function App() {
         pending += scheduled;
       }
     }
+  }
+
+  async function reconcileAlarmKitSchedule(nextAlarms: Alarm[]) {
+    await Promise.all(alarms.map((alarm) => AlarmKit.cancelAlarm(alarm.id).catch(() => undefined)));
+
+    let scheduled = 0;
+
+    for (const alarm of nextAlarms) {
+      const occurrences = getUpcomingOccurrences(alarm, { maxOccurrences: 1 });
+      const occurrence = occurrences[0];
+
+      if (!occurrence) {
+        continue;
+      }
+
+      await AlarmKit.scheduleAlarm({
+        id: alarm.id,
+        title: alarm.label || 'Alarum',
+        scheduledAt: occurrence.scheduledAt,
+        snoozeMinutes: SNOOZE_MINUTES,
+      });
+      scheduled += 1;
+    }
+
+    setNativeAlarmState(`AlarmKit scheduled ${scheduled}`);
   }
 
   async function scheduleNotificationBurst({
@@ -332,7 +390,7 @@ export default function App() {
   async function saveDraft() {
     const now = new Date().toISOString();
     const cleanRepeatWeekdays = [...new Set(draft.repeatWeekdays)].sort((a, b) => a - b);
-    const id = draft.id ?? `alarm-${Date.now()}`;
+    const id = draft.id ?? createUUID();
     const nextAlarmValue: Alarm = {
       id,
       label: draft.label.trim() || 'Alarm',
@@ -356,9 +414,7 @@ export default function App() {
     setAlarms(nextAlarms);
     setScreen('list');
 
-    if (await ensureNotificationPermission()) {
-      await reconcileSchedule(nextAlarms);
-    }
+    await reconcileSchedule(nextAlarms);
   }
 
   async function deleteDraft() {
@@ -383,9 +439,7 @@ export default function App() {
     );
     setAlarms(nextAlarms);
 
-    if (await ensureNotificationPermission()) {
-      await reconcileSchedule(nextAlarms);
-    }
+    await reconcileSchedule(nextAlarms);
   }
 
   if (screen === 'edit') {
@@ -515,6 +569,11 @@ export default function App() {
         </View>
 
         {nextAlarm ? <NextUpCard alarm={nextAlarm} onPress={() => openEditAlarm(nextAlarm)} /> : <EmptyState />}
+
+        <View style={styles.nativeAlarmBanner}>
+          <Text style={styles.nativeAlarmBannerTitle}>Native alarm engine</Text>
+          <Text style={styles.nativeAlarmBannerText}>{nativeAlarmState}</Text>
+        </View>
 
         <View style={styles.listCard}>
           {sortedAlarms.map((alarm, index) => (
@@ -971,6 +1030,21 @@ function createDraft(): DraftAlarm {
   };
 }
 
+function formatAlarmKitState(state: AlarmKit.AlarmKitAuthorizationState): string {
+  switch (state) {
+    case 'authorized':
+      return 'AlarmKit authorized';
+    case 'denied':
+      return 'AlarmKit denied in iOS Settings';
+    case 'notDetermined':
+      return 'AlarmKit permission needed';
+    case 'unsupported':
+      return 'AlarmKit requires iOS 26';
+    default:
+      return 'AlarmKit unavailable';
+  }
+}
+
 function describeDraftConfirmation(draft: DraftAlarm): string {
   const alarm = makeAlarm({
     id: draft.id ?? 'draft',
@@ -1016,6 +1090,21 @@ function withTimeParts(date: Date, hour: number, minute: number): Date {
 
 function daysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
+}
+
+function createUUID(): string {
+  const bytes = Array.from({ length: 16 }, () => Math.floor(Math.random() * 256));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.map((byte) => byte.toString(16).padStart(2, '0'));
+
+  return [
+    hex.slice(0, 4).join(''),
+    hex.slice(4, 6).join(''),
+    hex.slice(6, 8).join(''),
+    hex.slice(8, 10).join(''),
+    hex.slice(10, 16).join(''),
+  ].join('-');
 }
 
 function formatTime(date: Date): string {
@@ -1336,6 +1425,24 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 13,
     textAlign: 'center',
+  },
+  nativeAlarmBanner: {
+    backgroundColor: 'rgba(255, 194, 75, 0.12)',
+    borderColor: 'rgba(255, 194, 75, 0.42)',
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  nativeAlarmBannerTitle: {
+    color: YELLOW,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  nativeAlarmBannerText: {
+    color: TEXT,
+    fontSize: 13,
   },
   pressed: {
     opacity: 0.82,

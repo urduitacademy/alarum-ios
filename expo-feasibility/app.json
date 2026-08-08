@@ -14,7 +14,9 @@
         "com.apple.developer.usernotifications.time-sensitive": true
       },
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAlarmKitUsageDescription": "Alarum uses alarms to play prominent scheduled alerts with Stop and Snooze controls.",
+        "NSSupportsLiveActivities": true
       }
     },
     "plugins": [
