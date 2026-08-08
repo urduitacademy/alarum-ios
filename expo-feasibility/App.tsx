@@ -1,13 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  PanResponder,
   Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   View,
@@ -25,6 +28,18 @@ const ALARM_CATEGORY = 'alarumAlarm';
 const ACTION_SNOOZE = 'snooze';
 const ACTION_STOP = 'stop';
 const MAX_PENDING_NOTIFICATIONS = 50;
+const MAX_ALARM_DURATION_MINUTES = 15;
+const SNOOZE_MINUTES = 5;
+const WHEEL_ITEM_HEIGHT = 44;
+const WHEEL_VISIBLE_ITEMS = 5;
+const WHEEL_HEIGHT = WHEEL_ITEM_HEIGHT * WHEEL_VISIBLE_ITEMS;
+const DARK = '#1B1E24';
+const PANEL = '#252A32';
+const TEXT = '#F2F3F5';
+const MUTED = '#6E7682';
+const YELLOW = '#FFC24B';
+const BORDER = 'rgba(110, 118, 130, 0.35)';
+const DANGER = '#D3422F';
 
 type Screen = 'list' | 'edit';
 type DraftAlarm = {
@@ -36,6 +51,11 @@ type DraftAlarm = {
   sound: boolean;
   vibrationAndFlash: boolean;
   enabled: boolean;
+};
+
+type WheelOption = {
+  label: string;
+  value: number;
 };
 
 const initialAlarms: Alarm[] = [
@@ -65,6 +85,16 @@ const weekdayOptions: Array<{ label: string; longLabel: string; value: Weekday }
   { label: 'S', longLabel: 'Sunday', value: 0 },
 ];
 
+const hours = Array.from({ length: 24 }, (_, value) => ({
+  label: value.toString().padStart(2, '0'),
+  value,
+}));
+
+const minutes = Array.from({ length: 60 }, (_, value) => ({
+  label: value.toString().padStart(2, '0'),
+  value,
+}));
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
@@ -78,44 +108,32 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('list');
   const [alarms, setAlarms] = useState<Alarm[]>(initialAlarms);
   const [draft, setDraft] = useState<DraftAlarm>(() => createDraft());
-  const [permissionState, setPermissionState] = useState('Not checked');
-  const [lastAction, setLastAction] = useState('Ready');
-  const [scheduledCount, setScheduledCount] = useState(0);
 
   useEffect(() => {
-    refreshStatus();
     registerAlarmCategory();
 
-    const received = Notifications.addNotificationReceivedListener((notification) => {
-      setLastAction(`Received: ${notification.request.content.title ?? 'notification'}`);
-    });
-
     const response = Notifications.addNotificationResponseReceivedListener(async (event) => {
+      const notificationId = event.notification.request.identifier;
+
       if (event.actionIdentifier === ACTION_STOP) {
-        await Notifications.cancelAllScheduledNotificationsAsync();
-        setLastAction('Stop action received. Pending notifications cancelled.');
-        await refreshScheduledCount();
+        await cancelNotificationBurst(notificationId);
         return;
       }
 
       if (event.actionIdentifier === ACTION_SNOOZE) {
-        await scheduleNotification({
-          identifier: `alarum.snooze.${Date.now()}`,
-          seconds: 5 * 60,
+        await cancelNotificationBurst(notificationId);
+        await scheduleNotificationBurst({
+          idPrefix: `alarum.snooze.${Date.now()}`,
+          baseSeconds: SNOOZE_MINUTES * 60,
           title: 'Alarum snooze',
           body: 'Snoozed for 5 minutes.',
           sound: true,
+          remainingSlots: MAX_ALARM_DURATION_MINUTES + 1,
         });
-        setLastAction('Snooze action received. New 5-minute notification scheduled.');
-        await refreshScheduledCount();
-        return;
       }
-
-      setLastAction('Notification opened.');
     });
 
     return () => {
-      received.remove();
       response.remove();
     };
   }, []);
@@ -129,21 +147,6 @@ export default function App() {
   }, [alarms]);
 
   const nextAlarm = sortedAlarms.find((alarm) => getNextOccurrence(alarm));
-  const canSchedule = permissionState.includes('granted') || permissionState.includes('authorized');
-
-  async function refreshStatus() {
-    const permissions = await Notifications.getPermissionsAsync();
-    const iosStatus = permissions.ios?.status;
-    setPermissionState(
-      `status=${permissions.status}; granted=${permissions.granted}; ios=${iosStatus ?? 'n/a'}`
-    );
-    await refreshScheduledCount();
-  }
-
-  async function refreshScheduledCount() {
-    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    setScheduledCount(scheduled.length);
-  }
 
   async function registerAlarmCategory() {
     await Notifications.setNotificationCategoryAsync(ALARM_CATEGORY, [
@@ -168,7 +171,13 @@ export default function App() {
     ]);
   }
 
-  async function requestPermissions() {
+  async function ensureNotificationPermission() {
+    const current = await Notifications.getPermissionsAsync();
+
+    if (current.granted) {
+      return true;
+    }
+
     const result = await Notifications.requestPermissionsAsync({
       ios: {
         allowAlert: true,
@@ -177,20 +186,22 @@ export default function App() {
       },
     });
 
-    setPermissionState(
-      `status=${result.status}; granted=${result.granted}; ios=${result.ios?.status ?? 'n/a'}`
-    );
-    setLastAction(result.granted ? 'Notifications allowed.' : 'Notifications not allowed.');
+    if (!result.granted) {
+      Alert.alert(
+        'Notifications are off',
+        'Alarum can save the alarm, but iOS will not show or sound it until notifications are allowed.'
+      );
+    }
+
+    return result.granted;
   }
 
   async function reconcileSchedule(nextAlarms: Alarm[]) {
-    const permissions = await Notifications.getPermissionsAsync();
-
     await Notifications.cancelAllScheduledNotificationsAsync();
 
+    const permissions = await Notifications.getPermissionsAsync();
+
     if (!permissions.granted) {
-      setLastAction('Alarms saved. Notifications are not allowed yet.');
-      await refreshScheduledCount();
       return;
     }
 
@@ -210,34 +221,53 @@ export default function App() {
           continue;
         }
 
-        await scheduleNotification({
-          identifier: `alarum.${alarm.id}.${occurrence.occurrenceIndex}`,
-          seconds,
+        const scheduled = await scheduleNotificationBurst({
+          idPrefix: `alarum.${alarm.id}.${occurrence.occurrenceIndex}`,
+          baseSeconds: seconds,
           title: alarm.label || 'Alarum',
           body: formatOccurrenceBody(alarm, occurrence.scheduledAt),
           sound: alarm.alertPreferences.sound,
+          remainingSlots: MAX_PENDING_NOTIFICATIONS - pending,
         });
-        pending += 1;
 
-        for (const minute of [5, 10]) {
-          if (pending >= MAX_PENDING_NOTIFICATIONS) {
-            break;
-          }
-
-          await scheduleNotification({
-            identifier: `alarum.${alarm.id}.${occurrence.occurrenceIndex}.nag.${minute}`,
-            seconds: seconds + minute * 60,
-            title: `${alarm.label || 'Alarum'} reminder`,
-            body: `Nag alert at +${minute} minutes.`,
-            sound: alarm.alertPreferences.sound,
-          });
-          pending += 1;
-        }
+        pending += scheduled;
       }
     }
+  }
 
-    setLastAction(`Scheduled ${pending} notification${pending === 1 ? '' : 's'}.`);
-    await refreshScheduledCount();
+  async function scheduleNotificationBurst({
+    idPrefix,
+    baseSeconds,
+    title,
+    body,
+    sound,
+    remainingSlots,
+  }: {
+    idPrefix: string;
+    baseSeconds: number;
+    title: string;
+    body: string;
+    sound: boolean;
+    remainingSlots: number;
+  }) {
+    let scheduled = 0;
+
+    for (let minute = 0; minute <= MAX_ALARM_DURATION_MINUTES; minute += 1) {
+      if (scheduled >= remainingSlots) {
+        break;
+      }
+
+      await scheduleNotification({
+        identifier: `${idPrefix}.pulse.${minute}`,
+        seconds: baseSeconds + minute * 60,
+        title,
+        body: minute === 0 ? body : `${body} Still active. Stop or snooze from the alert.`,
+        sound,
+      });
+      scheduled += 1;
+    }
+
+    return scheduled;
   }
 
   async function scheduleNotification({
@@ -267,6 +297,17 @@ export default function App() {
         seconds,
       },
     });
+  }
+
+  async function cancelNotificationBurst(notificationId: string) {
+    const [idPrefix] = notificationId.split('.pulse.');
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+
+    await Promise.all(
+      scheduled
+        .filter((notification) => notification.identifier.startsWith(`${idPrefix}.pulse.`))
+        .map((notification) => Notifications.cancelScheduledNotificationAsync(notification.identifier))
+    );
   }
 
   function openNewAlarm() {
@@ -314,7 +355,10 @@ export default function App() {
 
     setAlarms(nextAlarms);
     setScreen('list');
-    await reconcileSchedule(nextAlarms);
+
+    if (await ensureNotificationPermission()) {
+      await reconcileSchedule(nextAlarms);
+    }
   }
 
   async function deleteDraft() {
@@ -323,9 +367,13 @@ export default function App() {
       return;
     }
 
-    const nextAlarms = alarms.filter((alarm) => alarm.id !== draft.id);
-    setAlarms(nextAlarms);
+    await deleteAlarm(draft.id);
     setScreen('list');
+  }
+
+  async function deleteAlarm(alarmId: string) {
+    const nextAlarms = alarms.filter((alarm) => alarm.id !== alarmId);
+    setAlarms(nextAlarms);
     await reconcileSchedule(nextAlarms);
   }
 
@@ -334,23 +382,10 @@ export default function App() {
       alarm.id === alarmId ? { ...alarm, enabled: !alarm.enabled, updatedAt: new Date().toISOString() } : alarm
     );
     setAlarms(nextAlarms);
-    await reconcileSchedule(nextAlarms);
-  }
 
-  async function skipNext(alarmId: string) {
-    const nextAlarms = alarms.map((alarm) =>
-      alarm.id === alarmId
-        ? { ...alarm, firedCount: alarm.firedCount + 1, updatedAt: new Date().toISOString() }
-        : alarm
-    );
-    setAlarms(nextAlarms);
-    await reconcileSchedule(nextAlarms);
-  }
-
-  async function cancelAll() {
-    await Notifications.cancelAllScheduledNotificationsAsync();
-    setLastAction('All pending notifications cancelled.');
-    await refreshScheduledCount();
+    if (await ensureNotificationPermission()) {
+      await reconcileSchedule(nextAlarms);
+    }
   }
 
   if (screen === 'edit') {
@@ -368,25 +403,8 @@ export default function App() {
             </Pressable>
           </View>
 
-          <View style={styles.timePanel}>
-            <Text style={styles.formLabel}>Time</Text>
-            <Text style={styles.editTime}>{formatTime(draft.date)}</Text>
-            <View style={styles.stepperGrid}>
-              <StepperButton label="-1 hour" onPress={() => setDraftDate(addHours(draft.date, -1))} />
-              <StepperButton label="+1 hour" onPress={() => setDraftDate(addHours(draft.date, 1))} />
-              <StepperButton label="-5 min" onPress={() => setDraftDate(addMinutes(draft.date, -5))} />
-              <StepperButton label="+5 min" onPress={() => setDraftDate(addMinutes(draft.date, 5))} />
-            </View>
-          </View>
-
-          <View style={styles.card}>
-            <Text style={styles.formLabel}>Date</Text>
-            <Text style={styles.cardValue}>{formatLongDate(draft.date)}</Text>
-            <View style={styles.stepperGrid}>
-              <StepperButton label="-1 day" onPress={() => setDraftDate(addDays(draft.date, -1))} />
-              <StepperButton label="+1 day" onPress={() => setDraftDate(addDays(draft.date, 1))} />
-            </View>
-          </View>
+          <TimeWheelPanel date={draft.date} setDate={setDraftDate} />
+          <DateWheelPanel date={draft.date} setDate={setDraftDate} />
 
           <View style={styles.card}>
             <Text style={styles.formLabel}>Label</Text>
@@ -394,7 +412,7 @@ export default function App() {
               value={draft.label}
               onChangeText={(label) => setDraft((current) => ({ ...current, label }))}
               placeholder="Dentist"
-              placeholderTextColor="#6E7682"
+              placeholderTextColor={MUTED}
               style={styles.input}
             />
           </View>
@@ -425,7 +443,7 @@ export default function App() {
                 <Text style={styles.formLabel}>Limit</Text>
                 <View style={styles.inlineSwitch}>
                   <Text style={styles.metaText}>Forever</Text>
-                  <Switch
+                  <AppSwitch
                     value={draft.limit.kind === 'forever'}
                     onValueChange={(forever) =>
                       setDraft((current) => ({
@@ -433,8 +451,6 @@ export default function App() {
                         limit: forever ? { kind: 'forever' } : { kind: 'count', occurrences: 2 },
                       }))
                     }
-                    trackColor={{ false: '#D3D6DC', true: '#FFC24B' }}
-                    thumbColor={draft.limit.kind === 'forever' ? '#1B1E24' : '#6E7682'}
                   />
                 </View>
               </View>
@@ -452,7 +468,7 @@ export default function App() {
           <View style={styles.card}>
             <PreferenceRow
               title="Sound"
-              subtitle="Primary alert"
+              subtitle={`Rings until Stop, up to ${MAX_ALARM_DURATION_MINUTES} minutes`}
               value={draft.sound}
               onValueChange={(sound) => setDraft((current) => ({ ...current, sound }))}
             />
@@ -502,41 +518,18 @@ export default function App() {
 
         <View style={styles.listCard}>
           {sortedAlarms.map((alarm, index) => (
-            <AlarmRow
-              alarm={alarm}
-              key={alarm.id}
-              last={index === sortedAlarms.length - 1}
-              onPress={() => openEditAlarm(alarm)}
-              onSkip={() => skipNext(alarm.id)}
-              onToggle={() => toggleAlarm(alarm.id)}
-            />
+            <SwipeDeleteRow key={alarm.id} last={index === sortedAlarms.length - 1} onDelete={() => deleteAlarm(alarm.id)}>
+              <AlarmRow
+                alarm={alarm}
+                onPress={() => openEditAlarm(alarm)}
+                onToggle={() => toggleAlarm(alarm.id)}
+              />
+            </SwipeDeleteRow>
           ))}
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Notifications</Text>
-          <Text style={styles.cardValue}>{permissionState}</Text>
-          <View style={styles.divider} />
-          <Text style={styles.cardLabel}>Scheduled notifications</Text>
-          <Text style={styles.cardValue}>{scheduledCount}</Text>
-          <View style={styles.divider} />
-          <Text style={styles.cardLabel}>Last action</Text>
-          <Text style={styles.cardValue}>{lastAction}</Text>
-        </View>
-
-        <View style={styles.actions}>
-          <ActionButton label="Allow notifications" onPress={requestPermissions} primary />
-          <ActionButton
-            label="Schedule saved alarms"
-            onPress={() => reconcileSchedule(alarms)}
-            disabled={!canSchedule}
-          />
-          <ActionButton label="Cancel pending tests" onPress={cancelAll} />
-          <ActionButton label="Refresh status" onPress={refreshStatus} />
-        </View>
-
         <Text style={styles.footer}>
-          Alarum uses iOS notifications. It cannot fully override Silent Mode like the built-in Clock.
+          Alerts use iOS time-sensitive notifications now. Full iOS 26 AlarmKit is the native alarm path for silent-mode override.
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -566,6 +559,218 @@ export default function App() {
   }
 }
 
+function TimeWheelPanel({ date, setDate }: { date: Date; setDate: (date: Date) => void }) {
+  return (
+    <View style={styles.timePanel}>
+      <Text style={styles.formLabel}>Time</Text>
+      <Text style={styles.editTime}>{formatTime(date)}</Text>
+      <View style={styles.timeWheelRow}>
+        <WheelPicker
+          accessibilityLabel="Hour"
+          options={hours}
+          value={date.getHours()}
+          onChange={(hour) => setDate(withTimeParts(date, hour, date.getMinutes()))}
+        />
+        <Text style={styles.wheelColon}>:</Text>
+        <WheelPicker
+          accessibilityLabel="Minute"
+          options={minutes}
+          value={date.getMinutes()}
+          onChange={(minute) => setDate(withTimeParts(date, date.getHours(), minute))}
+        />
+      </View>
+    </View>
+  );
+}
+
+function DateWheelPanel({ date, setDate }: { date: Date; setDate: (date: Date) => void }) {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+  const currentYear = new Date().getFullYear();
+  const dayOptions = Array.from({ length: daysInMonth(year, month) }, (_, index) => ({
+    label: (index + 1).toString().padStart(2, '0'),
+    value: index + 1,
+  }));
+  const monthOptions = Array.from({ length: 12 }, (_, value) => ({
+    label: new Intl.DateTimeFormat('en-GB', { month: 'short' }).format(new Date(2026, value, 1)),
+    value,
+  }));
+  const yearOptions = Array.from({ length: 6 }, (_, index) => ({
+    label: String(currentYear + index),
+    value: currentYear + index,
+  }));
+
+  function updateDate(nextYear: number, nextMonth: number, nextDay: number) {
+    const safeDay = Math.min(nextDay, daysInMonth(nextYear, nextMonth));
+    setDate(
+      new Date(
+        nextYear,
+        nextMonth,
+        safeDay,
+        date.getHours(),
+        date.getMinutes(),
+        0,
+        0
+      )
+    );
+  }
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.formLabel}>Date</Text>
+      <Text style={styles.cardValue}>{formatLongDate(date)}</Text>
+      <View style={styles.dateWheelRow}>
+        <WheelPicker
+          accessibilityLabel="Day"
+          options={dayOptions}
+          value={Math.min(day, dayOptions[dayOptions.length - 1].value)}
+          onChange={(nextDay) => updateDate(year, month, nextDay)}
+        />
+        <WheelPicker
+          accessibilityLabel="Month"
+          options={monthOptions}
+          value={month}
+          onChange={(nextMonth) => updateDate(year, nextMonth, day)}
+        />
+        <WheelPicker
+          accessibilityLabel="Year"
+          options={yearOptions}
+          value={Math.max(currentYear, Math.min(year, currentYear + 5))}
+          onChange={(nextYear) => updateDate(nextYear, month, day)}
+        />
+      </View>
+    </View>
+  );
+}
+
+function WheelPicker({
+  accessibilityLabel,
+  options,
+  value,
+  onChange,
+}: {
+  accessibilityLabel: string;
+  options: WheelOption[];
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const scrollRef = useRef<ScrollView>(null);
+  const selectedIndex = Math.max(
+    0,
+    options.findIndex((option) => option.value === value)
+  );
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ y: selectedIndex * WHEEL_ITEM_HEIGHT, animated: false });
+    });
+  }, [selectedIndex, options.length]);
+
+  function handleMomentumEnd(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    const nextIndex = Math.max(
+      0,
+      Math.min(options.length - 1, Math.round(event.nativeEvent.contentOffset.y / WHEEL_ITEM_HEIGHT))
+    );
+    const option = options[nextIndex];
+
+    if (option && option.value !== value) {
+      onChange(option.value);
+    }
+  }
+
+  return (
+    <View accessibilityLabel={accessibilityLabel} style={styles.wheel}>
+      <View pointerEvents="none" style={styles.wheelSelection} />
+      <ScrollView
+        ref={scrollRef}
+        nestedScrollEnabled
+        showsVerticalScrollIndicator={false}
+        snapToInterval={WHEEL_ITEM_HEIGHT}
+        decelerationRate="fast"
+        contentContainerStyle={styles.wheelContent}
+        onMomentumScrollEnd={handleMomentumEnd}
+      >
+        {options.map((option, index) => {
+          const selected = index === selectedIndex;
+
+          return (
+            <Pressable
+              key={`${accessibilityLabel}-${option.value}`}
+              onPress={() => onChange(option.value)}
+              style={styles.wheelItem}
+            >
+              <Text style={[styles.wheelText, selected && styles.wheelTextSelected]}>{option.label}</Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+function SwipeDeleteRow({
+  children,
+  last,
+  onDelete,
+}: {
+  children: React.ReactNode;
+  last: boolean;
+  onDelete: () => void;
+}) {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const opened = useRef(false);
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 12 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+        onPanResponderMove: (_, gesture) => {
+          if (gesture.dx < 0) {
+            translateX.setValue(Math.max(-92, gesture.dx));
+          }
+        },
+        onPanResponderRelease: (_, gesture) => {
+          const shouldOpen = gesture.dx < -48 || gesture.vx < -0.7;
+          opened.current = shouldOpen;
+          Animated.spring(translateX, {
+            toValue: shouldOpen ? -92 : 0,
+            useNativeDriver: true,
+            bounciness: 0,
+          }).start();
+        },
+      }),
+    [translateX]
+  );
+
+  function closeOrDelete() {
+    onDelete();
+    opened.current = false;
+    translateX.setValue(0);
+  }
+
+  return (
+    <View style={[styles.swipeContainer, !last && styles.rowBorder]}>
+      <View style={styles.deleteActionLayer}>
+        <Pressable accessibilityRole="button" onPress={closeOrDelete} style={styles.swipeDeleteAction}>
+          <Text style={styles.swipeDeleteText}>Delete</Text>
+        </Pressable>
+      </View>
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={[
+          styles.swipeContent,
+          {
+            transform: [{ translateX }],
+          },
+        ]}
+      >
+        {children}
+      </Animated.View>
+    </View>
+  );
+}
+
 function NextUpCard({ alarm, onPress }: { alarm: Alarm; onPress: () => void }) {
   const next = getNextOccurrence(alarm);
 
@@ -588,22 +793,18 @@ function NextUpCard({ alarm, onPress }: { alarm: Alarm; onPress: () => void }) {
 
 function AlarmRow({
   alarm,
-  last,
   onPress,
-  onSkip,
   onToggle,
 }: {
   alarm: Alarm;
-  last: boolean;
   onPress: () => void;
-  onSkip: () => void;
   onToggle: () => void;
 }) {
   const next = getNextOccurrence(alarm);
   const nextDate = next ? new Date(next.scheduledAt) : null;
 
   return (
-    <Pressable onPress={onPress} style={[styles.alarmRow, !last && styles.rowBorder]}>
+    <Pressable onPress={onPress} style={styles.alarmRow}>
       <View style={styles.timeColumn}>
         <Text style={styles.rowTime}>{nextDate ? formatTime(nextDate) : '--:--'}</Text>
         <Text style={styles.rowDate}>{nextDate ? formatShortDate(nextDate) : 'Ended'}</Text>
@@ -611,17 +812,24 @@ function AlarmRow({
 
       <View style={styles.rowBody}>
         <Text style={styles.rowLabel}>{alarm.label}</Text>
-        <Pressable onPress={onSkip} hitSlop={10} style={styles.tallyRow}>
-          <Tally alarm={alarm} />
-        </Pressable>
+        <Tally alarm={alarm} />
       </View>
 
-      <Switch
-        value={alarm.enabled}
-        onValueChange={onToggle}
-        trackColor={{ false: '#D3D6DC', true: '#FFC24B' }}
-        thumbColor={alarm.enabled ? '#1B1E24' : '#6E7682'}
-      />
+      <AppSwitch value={alarm.enabled} onValueChange={onToggle} />
+    </Pressable>
+  );
+}
+
+function AppSwitch({ value, onValueChange }: { value: boolean; onValueChange: (value: boolean) => void }) {
+  return (
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+      onPress={() => onValueChange(!value)}
+      hitSlop={8}
+      style={[styles.appSwitch, value ? styles.appSwitchOn : styles.appSwitchOff]}
+    >
+      <View style={[styles.appSwitchThumb, value ? styles.appSwitchThumbOn : styles.appSwitchThumbOff]} />
     </Pressable>
   );
 }
@@ -687,12 +895,7 @@ function PreferenceRow({
         <Text style={styles.preferenceTitle}>{title}</Text>
         <Text style={styles.preferenceSubtitle}>{subtitle}</Text>
       </View>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        trackColor={{ false: '#D3D6DC', true: '#FFC24B' }}
-        thumbColor={value ? '#1B1E24' : '#6E7682'}
-      />
+      <AppSwitch value={value} onValueChange={onValueChange} />
     </View>
   );
 }
@@ -717,36 +920,6 @@ function LimitCountControl({
       </View>
       <StepperButton label="+" onPress={() => setDraftLimit(occurrences + 1)} />
     </View>
-  );
-}
-
-function ActionButton({
-  label,
-  onPress,
-  primary,
-  disabled,
-}: {
-  label: string;
-  onPress: () => void;
-  primary?: boolean;
-  disabled?: boolean;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.button,
-        primary ? styles.primaryButton : styles.secondaryButton,
-        pressed && styles.pressed,
-        disabled && styles.disabled,
-      ]}
-    >
-      <Text style={[styles.buttonText, primary ? styles.primaryButtonText : styles.secondaryButtonText]}>
-        {label}
-      </Text>
-    </Pressable>
   );
 }
 
@@ -813,8 +986,7 @@ function nextWeekdayAt(weekday: Weekday, hour: number, minute: number): Date {
   const now = new Date();
   const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0, 0);
   const daysAhead = (weekday - target.getDay() + 7) % 7;
-  const next = addDays(target, daysAhead === 0 && target <= now ? 7 : daysAhead);
-  return next;
+  return addDays(target, daysAhead === 0 && target <= now ? 7 : daysAhead);
 }
 
 function clampFutureDate(date: Date): Date {
@@ -826,16 +998,24 @@ function secondsUntil(date: Date): number {
   return Math.max(1, Math.round((date.getTime() - Date.now()) / 1000));
 }
 
-function addMinutes(date: Date, minutes: number): Date {
-  return new Date(date.getTime() + minutes * 60 * 1000);
+function addMinutes(date: Date, minutesToAdd: number): Date {
+  return new Date(date.getTime() + minutesToAdd * 60 * 1000);
 }
 
-function addHours(date: Date, hours: number): Date {
-  return addMinutes(date, hours * 60);
+function addHours(date: Date, hoursToAdd: number): Date {
+  return addMinutes(date, hoursToAdd * 60);
 }
 
-function addDays(date: Date, days: number): Date {
-  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+function addDays(date: Date, daysToAdd: number): Date {
+  return new Date(date.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+}
+
+function withTimeParts(date: Date, hour: number, minute: number): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute, 0, 0);
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate();
 }
 
 function formatTime(date: Date): string {
@@ -866,34 +1046,36 @@ function formatShortDate(date: Date): string {
 function formatCountdown(date: Date): string {
   const totalMinutes = Math.max(0, Math.round((date.getTime() - Date.now()) / 60000));
   const days = Math.floor(totalMinutes / 1440);
-  const hours = Math.floor((totalMinutes % 1440) / 60);
-  const minutes = totalMinutes % 60;
+  const hoursRemaining = Math.floor((totalMinutes % 1440) / 60);
+  const minutesRemaining = totalMinutes % 60;
 
   if (days > 0) {
-    return `in ${days} day${days === 1 ? '' : 's'}, ${hours} hour${hours === 1 ? '' : 's'}`;
+    return `in ${days} day${days === 1 ? '' : 's'}, ${hoursRemaining} hour${hoursRemaining === 1 ? '' : 's'}`;
   }
 
-  if (hours > 0) {
-    return `in ${hours} hour${hours === 1 ? '' : 's'}, ${minutes} min`;
+  if (hoursRemaining > 0) {
+    return `in ${hoursRemaining} hour${hoursRemaining === 1 ? '' : 's'}, ${minutesRemaining} min`;
   }
 
-  return `in ${minutes} min`;
+  return `in ${minutesRemaining} min`;
 }
 
 function formatOccurrenceBody(alarm: Alarm, scheduledAt: string): string {
-  return `${formatLongDate(new Date(scheduledAt))}. ${alarm.alertPreferences.vibrationAndFlash ? 'Vibration and flash on.' : 'Sound only.'}`;
+  return `${formatLongDate(new Date(scheduledAt))}. ${
+    alarm.alertPreferences.vibrationAndFlash ? 'Vibration and flash on.' : 'Sound only.'
+  }`;
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#1B1E24',
+    backgroundColor: DARK,
   },
   scrollContainer: {
     gap: 20,
     padding: 20,
     paddingBottom: 36,
-    backgroundColor: '#1B1E24',
+    backgroundColor: DARK,
   },
   headerRow: {
     alignItems: 'center',
@@ -901,38 +1083,38 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   title: {
-    color: '#F2F3F5',
+    color: TEXT,
     fontSize: 28,
     fontWeight: '500',
   },
   subtitle: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 13,
     marginTop: 4,
   },
   addButton: {
     alignItems: 'center',
-    backgroundColor: '#FFC24B',
+    backgroundColor: YELLOW,
     borderRadius: 10,
     height: 40,
     justifyContent: 'center',
     width: 40,
   },
   addButtonText: {
-    color: '#1B1E24',
+    color: DARK,
     fontSize: 28,
     fontWeight: '500',
     lineHeight: 30,
   },
   segmented: {
-    backgroundColor: '#252A32',
+    backgroundColor: PANEL,
     borderRadius: 10,
     flexDirection: 'row',
     padding: 3,
   },
   segmentActive: {
     alignItems: 'center',
-    backgroundColor: '#1B1E24',
+    backgroundColor: DARK,
     borderRadius: 8,
     flex: 1,
     paddingVertical: 10,
@@ -943,21 +1125,21 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   segmentActiveText: {
-    color: '#F2F3F5',
+    color: TEXT,
     fontSize: 13,
   },
   segmentText: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 13,
   },
   nextCard: {
-    backgroundColor: '#252A32',
+    backgroundColor: PANEL,
     borderRadius: 14,
     overflow: 'hidden',
     padding: 20,
   },
   nextAccent: {
-    backgroundColor: '#FFC24B',
+    backgroundColor: YELLOW,
     bottom: 0,
     left: 0,
     position: 'absolute',
@@ -965,75 +1147,97 @@ const styles = StyleSheet.create({
     width: 3,
   },
   nextTime: {
-    color: '#FFC24B',
+    color: YELLOW,
     fontSize: 40,
     fontVariant: ['tabular-nums'],
     fontWeight: '500',
   },
   nextDate: {
-    color: '#F2F3F5',
+    color: TEXT,
     fontSize: 16,
     fontVariant: ['tabular-nums'],
     marginTop: 4,
   },
   nextLabel: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 13,
     marginTop: 8,
   },
   card: {
-    backgroundColor: '#252A32',
+    backgroundColor: PANEL,
     borderRadius: 14,
     gap: 8,
     padding: 18,
   },
   listCard: {
-    backgroundColor: '#252A32',
+    backgroundColor: PANEL,
     borderRadius: 14,
-    paddingHorizontal: 16,
+    overflow: 'hidden',
   },
   cardHeaderRow: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  cardLabel: {
-    color: '#6E7682',
-    fontSize: 13,
-    fontWeight: '500',
-  },
   cardValue: {
-    color: '#F2F3F5',
+    color: TEXT,
     fontSize: 15,
     lineHeight: 21,
   },
   divider: {
-    backgroundColor: 'rgba(110, 118, 130, 0.35)',
+    backgroundColor: BORDER,
     height: StyleSheet.hairlineWidth,
     marginVertical: 6,
+  },
+  swipeContainer: {
+    backgroundColor: DANGER,
+    minHeight: 72,
+    overflow: 'hidden',
+  },
+  deleteActionLayer: {
+    bottom: 0,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    width: 92,
+  },
+  swipeDeleteAction: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  swipeDeleteText: {
+    color: TEXT,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  swipeContent: {
+    backgroundColor: PANEL,
   },
   alarmRow: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: 14,
     minHeight: 72,
+    paddingHorizontal: 16,
     paddingVertical: 14,
   },
   rowBorder: {
-    borderBottomColor: 'rgba(110, 118, 130, 0.35)',
+    borderBottomColor: BORDER,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   timeColumn: {
     width: 74,
   },
   rowTime: {
-    color: '#F2F3F5',
+    color: TEXT,
     fontSize: 20,
     fontVariant: ['tabular-nums'],
     fontWeight: '500',
   },
   rowDate: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 11,
     fontVariant: ['tabular-nums'],
     marginTop: 4,
@@ -1043,8 +1247,34 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rowLabel: {
-    color: '#F2F3F5',
+    color: TEXT,
     fontSize: 13,
+  },
+  appSwitch: {
+    borderRadius: 18,
+    height: 32,
+    justifyContent: 'center',
+    padding: 3,
+    width: 58,
+  },
+  appSwitchOn: {
+    alignItems: 'flex-end',
+    backgroundColor: YELLOW,
+  },
+  appSwitchOff: {
+    alignItems: 'flex-start',
+    backgroundColor: '#626976',
+  },
+  appSwitchThumb: {
+    borderRadius: 13,
+    height: 26,
+    width: 26,
+  },
+  appSwitchThumbOn: {
+    backgroundColor: DARK,
+  },
+  appSwitchThumbOff: {
+    backgroundColor: TEXT,
   },
   tallyRow: {
     alignItems: 'center',
@@ -1063,28 +1293,28 @@ const styles = StyleSheet.create({
     width: 2,
   },
   tally_fired: {
-    backgroundColor: '#6E7682',
+    backgroundColor: MUTED,
   },
   tally_next: {
-    backgroundColor: '#FFC24B',
+    backgroundColor: YELLOW,
   },
   tally_remaining: {
-    backgroundColor: '#F2F3F5',
+    backgroundColor: TEXT,
   },
   tallyStrike: {
-    backgroundColor: '#6E7682',
+    backgroundColor: MUTED,
     height: 2,
     position: 'absolute',
     transform: [{ rotate: '-38deg' }],
     width: 14,
   },
   tallyOverflow: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 11,
     fontVariant: ['tabular-nums'],
   },
   infinitySmall: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 16,
     fontVariant: ['tabular-nums'],
   },
@@ -1094,53 +1324,24 @@ const styles = StyleSheet.create({
     paddingVertical: 44,
   },
   emptyMark: {
-    color: 'rgba(110, 118, 130, 0.35)',
+    color: BORDER,
     fontSize: 54,
     fontWeight: '500',
   },
   emptyTitle: {
-    color: '#F2F3F5',
+    color: TEXT,
     fontSize: 16,
   },
   emptyCopy: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 13,
     textAlign: 'center',
-  },
-  actions: {
-    gap: 12,
-  },
-  button: {
-    alignItems: 'center',
-    borderRadius: 10,
-    paddingVertical: 16,
-  },
-  primaryButton: {
-    backgroundColor: '#FFC24B',
-  },
-  secondaryButton: {
-    backgroundColor: '#252A32',
-    borderColor: 'rgba(110, 118, 130, 0.55)',
-    borderWidth: StyleSheet.hairlineWidth,
   },
   pressed: {
     opacity: 0.82,
   },
-  disabled: {
-    opacity: 0.45,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  primaryButtonText: {
-    color: '#1B1E24',
-  },
-  secondaryButtonText: {
-    color: '#F2F3F5',
-  },
   footer: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 11,
     lineHeight: 16,
   },
@@ -1150,61 +1351,106 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   navAction: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 16,
   },
   navTitle: {
-    color: '#F2F3F5',
+    color: TEXT,
     fontSize: 16,
     fontWeight: '500',
   },
   saveAction: {
-    color: '#FFC24B',
+    color: YELLOW,
     fontSize: 16,
     fontWeight: '500',
   },
   timePanel: {
     alignItems: 'center',
-    backgroundColor: '#252A32',
+    backgroundColor: PANEL,
     borderRadius: 14,
-    gap: 14,
+    gap: 12,
     padding: 18,
   },
   formLabel: {
     alignSelf: 'flex-start',
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 13,
     fontWeight: '500',
   },
   editTime: {
-    color: '#F2F3F5',
+    color: TEXT,
     fontSize: 48,
     fontVariant: ['tabular-nums'],
     fontWeight: '500',
   },
-  stepperGrid: {
+  timeWheelRow: {
+    alignItems: 'center',
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  dateWheelRow: {
+    flexDirection: 'row',
     gap: 8,
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  wheel: {
+    height: WHEEL_HEIGHT,
+    overflow: 'hidden',
+    width: 94,
+  },
+  wheelContent: {
+    paddingVertical: WHEEL_ITEM_HEIGHT * 2,
+  },
+  wheelSelection: {
+    backgroundColor: 'rgba(27, 30, 36, 0.78)',
+    borderRadius: 8,
+    height: WHEEL_ITEM_HEIGHT,
+    left: 2,
+    position: 'absolute',
+    right: 2,
+    top: WHEEL_ITEM_HEIGHT * 2,
+  },
+  wheelItem: {
+    alignItems: 'center',
+    height: WHEEL_ITEM_HEIGHT,
+    justifyContent: 'center',
+  },
+  wheelText: {
+    color: 'rgba(242, 243, 245, 0.34)',
+    fontSize: 23,
+    fontVariant: ['tabular-nums'],
+    fontWeight: '500',
+  },
+  wheelTextSelected: {
+    color: TEXT,
+    fontSize: 28,
+  },
+  wheelColon: {
+    color: TEXT,
+    fontSize: 30,
+    fontVariant: ['tabular-nums'],
+    fontWeight: '500',
+    marginHorizontal: -4,
   },
   stepperButton: {
     alignItems: 'center',
     borderColor: 'rgba(110, 118, 130, 0.55)',
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
-    minWidth: 84,
+    minWidth: 44,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   stepperText: {
-    color: '#F2F3F5',
+    color: TEXT,
     fontSize: 13,
     fontWeight: '500',
   },
   input: {
-    borderBottomColor: 'rgba(110, 118, 130, 0.35)',
+    borderBottomColor: BORDER,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    color: '#F2F3F5',
+    color: TEXT,
     fontSize: 16,
     paddingVertical: 10,
   },
@@ -1222,16 +1468,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   weekdayChipSelected: {
-    backgroundColor: '#FFC24B',
-    borderColor: '#FFC24B',
+    backgroundColor: YELLOW,
+    borderColor: YELLOW,
   },
   weekdayText: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 13,
     fontWeight: '500',
   },
   weekdayTextSelected: {
-    color: '#1B1E24',
+    color: DARK,
   },
   inlineSwitch: {
     alignItems: 'center',
@@ -1239,7 +1485,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   metaText: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 13,
     fontVariant: ['tabular-nums'],
   },
@@ -1264,18 +1510,18 @@ const styles = StyleSheet.create({
     width: 18,
   },
   tallyLarge: {
-    backgroundColor: '#F2F3F5',
+    backgroundColor: TEXT,
     borderRadius: 2,
     height: 34,
     width: 3,
   },
   infinity: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 28,
     fontVariant: ['tabular-nums'],
   },
   confirmationText: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -1289,24 +1535,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   preferenceTitle: {
-    color: '#F2F3F5',
+    color: TEXT,
     fontSize: 16,
     fontWeight: '500',
   },
   preferenceSubtitle: {
-    color: '#6E7682',
+    color: MUTED,
     fontSize: 11,
     marginTop: 4,
   },
   deleteButton: {
     alignItems: 'center',
-    borderColor: '#C2402F',
+    borderColor: DANGER,
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
     paddingVertical: 14,
   },
   deleteButtonText: {
-    color: '#C2402F',
+    color: DANGER,
     fontSize: 16,
     fontWeight: '500',
   },

@@ -10,7 +10,6 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.alarum.app",
-      "buildNumber": "1",
       "entitlements": {
         "com.apple.developer.usernotifications.time-sensitive": true
       },
