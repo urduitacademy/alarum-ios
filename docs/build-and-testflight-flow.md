@@ -115,6 +115,18 @@ First TestFlight install:
 - Initial app launch confirmed notification permission was granted.
 - The app showed `3` scheduled notifications after scheduling the feasibility test.
 
+Second EAS build and submit:
+
+- Build ID: `913a0a7d-15ca-4d24-a3a0-fc5b8e224f70`
+- Commit: `c390d12f51df6197bd4208228f0681a0d37f61ff`
+- App version: `0.1.0`
+- Build number: `4`
+- Build logs: https://expo.dev/accounts/dinovaux/projects/alarum-ios-feasibility/builds/913a0a7d-15ca-4d24-a3a0-fc5b8e224f70
+- IPA artifact: https://expo.dev/artifacts/eas/Qj_nE3WRo10rLy248ZeOo3-16X9KLbfyyt4qfijxi_w.ipa
+- Submission ID: `04a393b9-2e7c-440c-aba6-571fdcd5c908`
+- Submission details: https://expo.dev/accounts/dinovaux/projects/alarum-ios-feasibility/submissions/04a393b9-2e7c-440c-aba6-571fdcd5c908
+- Uploaded successfully to Apple App Store Connect on 08 August 2026.
+
 First real-device notification results:
 
 - In normal ring mode, the one-minute notification produced an audible sound and lock-screen alert.
